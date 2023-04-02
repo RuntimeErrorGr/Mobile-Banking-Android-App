@@ -1,4 +1,4 @@
-package eim.project.mobile_banking_android_app.ui.notifications
+package eim.project.mobile_banking_android_app.ui.payments
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,11 +7,11 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import eim.project.mobile_banking_android_app.databinding.FragmentNotificationsBinding
+import eim.project.mobile_banking_android_app.databinding.FragmentPaymentsBinding
 
-class NotificationsFragment : Fragment() {
+class PaymentsFragment : Fragment() {
 
-    private var _binding: FragmentNotificationsBinding? = null
+    private var _binding: FragmentPaymentsBinding? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -22,14 +22,14 @@ class NotificationsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val notificationsViewModel =
-            ViewModelProvider(this).get(NotificationsViewModel::class.java)
+        val paymentsViewModel =
+            ViewModelProvider(this).get(PaymentsViewModel::class.java)
 
-        _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
+        _binding = FragmentPaymentsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textNotifications
-        notificationsViewModel.text.observe(viewLifecycleOwner) {
+        val textView: TextView = binding.textPayments
+        paymentsViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
         }
         return root

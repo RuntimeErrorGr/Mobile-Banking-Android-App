@@ -1,13 +1,13 @@
-package eim.project.mobile_banking_android_app.ui.notifications
+package eim.project.mobile_banking_android_app.ui.transactions
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-class NotificationsViewModel : ViewModel() {
+class TransactionsViewModel : ViewModel() {
 
     private val _text = MutableLiveData<String>().apply {
-        value = "This is notifications Fragment"
+        value = "This is transactions Fragment"
     }
     val text: LiveData<String> = _text
 }

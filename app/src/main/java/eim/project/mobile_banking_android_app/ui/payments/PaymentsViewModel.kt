@@ -1,13 +1,14 @@
-package eim.project.mobile_banking_android_app.ui.dashboard
+package eim.project.mobile_banking_android_app.ui.payments
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-class DashboardViewModel : ViewModel() {
+class PaymentsViewModel : ViewModel() {
 
     private val _text = MutableLiveData<String>().apply {
-        value = "This is dashboard Fragment"
+        value = "This is payments Fragment"
     }
     val text: LiveData<String> = _text
+
 }
