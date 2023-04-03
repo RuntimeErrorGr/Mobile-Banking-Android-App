@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import eim.project.mobile_banking_android_app.MainActivity
@@ -30,8 +29,6 @@ class HomeFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val homeViewModel =
-            ViewModelProvider(this).get(HomeViewModel::class.java)
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
@@ -61,7 +58,6 @@ class HomeFragment : Fragment() {
 
         binding.saveButton.setOnClickListener() {
             sendCardDetailsToDatabase()
-            binding.addCreditCardBtn.isEnabled = false
         }
 
         return root
@@ -86,45 +82,80 @@ class HomeFragment : Fragment() {
     private fun sendCardDetailsToDatabase() {
         val database = FirebaseDatabase.getInstance()
         val currentUser = FirebaseAuth.getInstance().currentUser
-        val cardsRef = database.getReference("users/${currentUser?.uid}/card")
+        val cardsRef = database.getReference("users/${currentUser?.uid}/cards")
 
         val cardNumber = binding.numberEditText.text.toString()
         val nameOnCard = binding.nameEditText.text.toString()
         val expirationDate = binding.dateEditText.text.toString()
         val cvv = binding.cvvEditText.text.toString()
 
+        if (validateCardDetalisInput(cardNumber, nameOnCard, expirationDate, cvv)) {
+            val card = Card(cardNumber, nameOnCard, expirationDate, cvv)
+            cardsRef.push().setValue(card)
+            binding.popupLayout.visibility = View.GONE
+            binding.addCreditCardBtn.isEnabled = true
+            resetFields()
+            Toast.makeText(requireContext(), "Card successfully added!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun validateCardDetalisInput(
+        cardNumber: String,
+        nameOnCard: String,
+        expirationDate: String,
+        cvv: String
+    ): Boolean {
         // Validate that all fields are not empty
         if (cardNumber.isEmpty() || nameOnCard.isEmpty() || expirationDate.isEmpty() || cvv.isEmpty()) {
             Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
-            return
+            return false
         }
 
         // Validate the card number has 16 digits
         val cardNumberRegex = Regex("\\d{16}")
         if (!cardNumberRegex.matches(cardNumber)) {
             Toast.makeText(requireContext(), "Invalid card number", Toast.LENGTH_SHORT).show()
-            return
+            return false
         }
 
         // Validate the cvc has 3 digits
         val cvcRegex = Regex("\\d{3}")
         if (!cvcRegex.matches(cvv)) {
             Toast.makeText(requireContext(), "Invalid cvc", Toast.LENGTH_SHORT).show()
-            return
+            return false
         }
 
         // Validate the expiration date is in the format "mm/yy"
         val expirationDateRegex = Regex("\\d{2}/\\d{2}")
         if (!expirationDateRegex.matches(expirationDate)) {
             Toast.makeText(requireContext(), "Invalid expiration date", Toast.LENGTH_SHORT).show()
-            return
+            return false
+        }
+        val dateFormat = SimpleDateFormat("MM/yy", Locale.US)
+        val date = dateFormat.parse(expirationDate)
+        val calendar = Calendar.getInstance()
+
+        val inputMonth = date?.let {
+            val cal = Calendar.getInstance()
+            cal.time = it
+            cal.get(Calendar.MONTH)
+        }
+        val inputYear = date?.let {
+            val cal = Calendar.getInstance()
+            cal.time = it
+            cal.get(Calendar.YEAR)
+        }
+        val currentMonth = calendar.get(Calendar.MONTH)
+        val currentYear = calendar.get(Calendar.YEAR)
+
+        if (inputMonth != null && inputYear != null) {
+            if ((inputYear == currentYear && inputMonth <= currentMonth) || inputYear < currentYear) {
+                Toast.makeText(requireContext(), "Card already expired!", Toast.LENGTH_SHORT).show()
+                return false
+            }
         }
 
-        val card = Card(cardNumber, nameOnCard, expirationDate, cvv)
-        cardsRef.push().setValue(card)
-        binding.popupLayout.visibility = View.GONE
-        binding.addCreditCardBtn.isEnabled = false
-        Toast.makeText(requireContext(), "Card successfully added!", Toast.LENGTH_SHORT).show()
+        return true
     }
 
     private fun onDateSelected(day: Int, month: Int, year: Int) {
@@ -133,7 +164,14 @@ class HomeFragment : Fragment() {
             set(Calendar.MONTH, month)
         }
         val formattedDate = SimpleDateFormat("MM/yy", Locale.US).format(selectedDate.time)
-        binding.dateEditText.setText(formattedDate)
+        binding.dateEditText.text = formattedDate
+    }
+
+    private fun resetFields() {
+        binding.numberEditText.text = null
+        binding.nameEditText.text = null
+        binding.dateEditText.text = null
+        binding.cvvEditText.text = null
     }
 
 

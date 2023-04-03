@@ -1,8 +1,10 @@
 package eim.project.mobile_banking_android_app.home.home
 
 class Card(
-    val cardNumber: String,
+    val number: String,
     val nameOnCard: String,
     val expirationDate: String,
-    val cvc: String
+    val cvv: String,
+    val sold: Double = 0.0,
+    val currency: String = "RON"
 )
