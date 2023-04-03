@@ -24,75 +24,78 @@
         android:id="@+id/addCreditCardBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="8dp"
         android:text="Add credit card"
+        app:layout_constraintBottom_toTopOf="@+id/logoutBtn"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/popupLayout" />
 
     <Button
         android:id="@+id/logoutBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="76dp"
-        android:layout_marginEnd="16dp"
         android:text="Logout"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/popupLayout" />
 
     <LinearLayout
         android:id="@+id/popupLayout"
         android:layout_width="350dp"
         android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
         android:background="@color/white"
         android:backgroundTint="@color/white"
-        android:orientation="vertical"
-        android:animateLayoutChanges="true"
-        android:padding="16dp"
         android:elevation="35dp"
+        android:orientation="vertical"
+        android:padding="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <EditText
-            android:id="@+id/nameEditText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="number"
-            android:hint="Card number" />
-
-        <EditText
             android:id="@+id/numberEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPersonName"
-            android:hint="Name on cad" />
+            android:hint="Card number"
+            android:inputType="number" />
 
         <EditText
-            android:id="@+id/cvcEditText"
+            android:id="@+id/nameEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="date"
-            android:hint="Expiration date" />
-
+            android:hint="Name on cad"
+            android:inputType="textPersonName" />
         <EditText
-            android:id="@+id/expirationEditText"
+            android:id="@+id/cvvEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
-            android:hint="CVC" />
+            android:hint="CVV"
+            android:inputType="numberPassword" />
+
+        <Button
+            android:id="@+id/dateEditText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/white"
+            android:textColor="@color/black"
+            android:elevation="80dp"
+            android:hint="Pick expiration date"
+            android:inputType="date" />
+
+
 
         <LinearLayout
             android:id="@+id/buttonLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@id/expirationEditText"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dateEditText">
 
             <Button
                 android:id="@+id/saveButton"
@@ -100,6 +103,7 @@
                 android:layout_height="50dp"
                 android:layout_weight="1"
                 android:text="Save" />
+
             <Space
                 android:layout_width="16dp"
                 android:layout_height="wrap_content" />

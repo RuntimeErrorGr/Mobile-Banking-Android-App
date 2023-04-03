@@ -1,6 +1,8 @@
 package eim.project.mobile_banking_android_app.home.home
 
 import android.content.Intent
+import android.icu.text.SimpleDateFormat
+import android.icu.util.Calendar
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +14,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import eim.project.mobile_banking_android_app.MainActivity
 import eim.project.mobile_banking_android_app.databinding.FragmentHomeBinding
+import java.util.*
 
 class HomeFragment : Fragment() {
 
@@ -42,23 +45,31 @@ class HomeFragment : Fragment() {
             checkUser()
         }
 
+        binding.dateEditText.setOnClickListener {
+            showDatePicker()
+        }
+
         binding.addCreditCardBtn.setOnClickListener() {
             binding.popupLayout.visibility = View.VISIBLE
-            binding.addCreditCardBtn.visibility = View.GONE
+            binding.addCreditCardBtn.isEnabled = false
         }
 
         binding.cancelButton.setOnClickListener() {
             binding.popupLayout.visibility = View.GONE
-            binding.addCreditCardBtn.visibility = View.VISIBLE
+            binding.addCreditCardBtn.isEnabled = true
         }
 
         binding.saveButton.setOnClickListener() {
             sendCardDetailsToDatabase()
-            binding.popupLayout.visibility = View.GONE
-            binding.addCreditCardBtn.visibility = View.GONE
+            binding.addCreditCardBtn.isEnabled = false
         }
 
         return root
+    }
+
+    private fun showDatePicker() {
+        val datePicker = DatePickerFragment { day, month, year -> onDateSelected(day, month, year) }
+        datePicker.show(parentFragmentManager, "datePicker")
     }
 
     private fun checkUser() {
@@ -77,13 +88,13 @@ class HomeFragment : Fragment() {
         val currentUser = FirebaseAuth.getInstance().currentUser
         val cardsRef = database.getReference("users/${currentUser?.uid}/card")
 
-        val cardNumber = binding.nameEditText.text.toString()
-        val nameOnCard = binding.numberEditText.text.toString()
-        val expirationDate = binding.cvcEditText.text.toString()
-        val cvc = binding.expirationEditText.text.toString()
+        val cardNumber = binding.numberEditText.text.toString()
+        val nameOnCard = binding.nameEditText.text.toString()
+        val expirationDate = binding.dateEditText.text.toString()
+        val cvv = binding.cvvEditText.text.toString()
 
         // Validate that all fields are not empty
-        if (cardNumber.isEmpty() || nameOnCard.isEmpty() || expirationDate.isEmpty() || cvc.isEmpty()) {
+        if (cardNumber.isEmpty() || nameOnCard.isEmpty() || expirationDate.isEmpty() || cvv.isEmpty()) {
             Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
             return
         }
@@ -97,7 +108,7 @@ class HomeFragment : Fragment() {
 
         // Validate the cvc has 3 digits
         val cvcRegex = Regex("\\d{3}")
-        if (!cvcRegex.matches(cvc)) {
+        if (!cvcRegex.matches(cvv)) {
             Toast.makeText(requireContext(), "Invalid cvc", Toast.LENGTH_SHORT).show()
             return
         }
@@ -109,10 +120,21 @@ class HomeFragment : Fragment() {
             return
         }
 
-        val card = Card(cardNumber, nameOnCard, expirationDate, cvc)
+        val card = Card(cardNumber, nameOnCard, expirationDate, cvv)
         cardsRef.push().setValue(card)
+        binding.popupLayout.visibility = View.GONE
+        binding.addCreditCardBtn.isEnabled = false
+        Toast.makeText(requireContext(), "Card successfully added!", Toast.LENGTH_SHORT).show()
     }
 
+    private fun onDateSelected(day: Int, month: Int, year: Int) {
+        val selectedDate = Calendar.getInstance().apply {
+            set(Calendar.YEAR, year)
+            set(Calendar.MONTH, month)
+        }
+        val formattedDate = SimpleDateFormat("MM/yy", Locale.US).format(selectedDate.time)
+        binding.dateEditText.setText(formattedDate)
+    }
 
 
     override fun onDestroyView() {
