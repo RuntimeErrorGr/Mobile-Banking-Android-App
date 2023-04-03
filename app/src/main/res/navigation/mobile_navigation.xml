@@ -7,19 +7,19 @@
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="eim.project.mobile_banking_android_app.ui.home.HomeFragment"
+        android:name="eim.project.mobile_banking_android_app.home.home.HomeFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_home" />
 
     <fragment
         android:id="@+id/navigation_payments"
-        android:name="eim.project.mobile_banking_android_app.ui.payments.PaymentsFragment"
+        android:name="eim.project.mobile_banking_android_app.home.payments.PaymentsFragment"
         android:label="@string/title_payments"
         tools:layout="@layout/fragment_dashboard" />
 
     <fragment
         android:id="@+id/navigation_transactions"
-        android:name="eim.project.mobile_banking_android_app.ui.transactions.TransactionsFragment"
+        android:name="eim.project.mobile_banking_android_app.home.transactions.TransactionsFragment"
         android:label="@string/title_transactions"
         tools:layout="@layout/fragment_transactions" />
 </navigation>

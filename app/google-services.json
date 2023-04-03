@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "972404312835",
+    "project_id": "eim-bank-app",
+    "storage_bucket": "eim-bank-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:972404312835:android:b0a7d783dd245a911e3736",
+        "android_client_info": {
+          "package_name": "eim.project.mobile_banking_android_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "972404312835-gn2seh3rehjt9o0kl6927jur7tf4vtu4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "eim.project.mobile_banking_android_app",
+            "certificate_hash": "d3a262a94eb4dec862b057898e65717def155ce7"
+          }
+        },
+        {
+          "client_id": "972404312835-0l687j6bo57ucra8qts7vsbk18hob91h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfGek-L_jxaiYEQhDZjmFMECjCuViYTc0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "972404312835-0l687j6bo57ucra8qts7vsbk18hob91h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,4 +1,4 @@
-package eim.project.mobile_banking_android_app.ui.home
+package eim.project.mobile_banking_android_app.home.home
 
 import android.os.Bundle
 import android.view.LayoutInflater
