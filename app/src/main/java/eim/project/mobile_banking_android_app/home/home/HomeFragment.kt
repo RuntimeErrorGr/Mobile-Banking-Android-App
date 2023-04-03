@@ -5,9 +5,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import eim.project.mobile_banking_android_app.MainActivity
 import eim.project.mobile_banking_android_app.databinding.FragmentHomeBinding
 
@@ -51,13 +53,11 @@ class HomeFragment : Fragment() {
         }
 
         binding.saveButton.setOnClickListener() {
-
+            sendCardDetailsToDatabase()
+            binding.popupLayout.visibility = View.GONE
+            binding.addCreditCardBtn.visibility = View.GONE
         }
 
-//        val textView: TextView = binding.textHome
-//        homeViewModel.text.observe(viewLifecycleOwner) {
-//            textView.text = it
-//        }
         return root
     }
 
@@ -70,6 +70,47 @@ class HomeFragment : Fragment() {
         } else {
             // TODO: user is logged in, get user info
         }
+    }
+
+    private fun sendCardDetailsToDatabase() {
+        val database = FirebaseDatabase.getInstance()
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val cardsRef = database.getReference("users/${currentUser?.uid}/card")
+
+        val cardNumber = binding.nameEditText.text.toString()
+        val nameOnCard = binding.numberEditText.text.toString()
+        val expirationDate = binding.cvcEditText.text.toString()
+        val cvc = binding.expirationEditText.text.toString()
+
+        // Validate that all fields are not empty
+        if (cardNumber.isEmpty() || nameOnCard.isEmpty() || expirationDate.isEmpty() || cvc.isEmpty()) {
+            Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Validate the card number has 16 digits
+        val cardNumberRegex = Regex("\\d{16}")
+        if (!cardNumberRegex.matches(cardNumber)) {
+            Toast.makeText(requireContext(), "Invalid card number", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Validate the cvc has 3 digits
+        val cvcRegex = Regex("\\d{3}")
+        if (!cvcRegex.matches(cvc)) {
+            Toast.makeText(requireContext(), "Invalid cvc", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Validate the expiration date is in the format "mm/yy"
+        val expirationDateRegex = Regex("\\d{2}/\\d{2}")
+        if (!expirationDateRegex.matches(expirationDate)) {
+            Toast.makeText(requireContext(), "Invalid expiration date", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val card = Card(cardNumber, nameOnCard, expirationDate, cvc)
+        cardsRef.push().setValue(card)
     }
 
 

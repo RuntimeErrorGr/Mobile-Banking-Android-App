@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "972404312835",
+    "firebase_url": "https://eim-bank-app-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "eim-bank-app",
     "storage_bucket": "eim-bank-app.appspot.com"
   },
