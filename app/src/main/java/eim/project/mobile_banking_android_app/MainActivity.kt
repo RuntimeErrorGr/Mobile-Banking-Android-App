@@ -138,7 +138,7 @@ class MainActivity : AppCompatActivity() {
                 val firebaseUser = authResult.user
                 val phone = firebaseUser!!.phoneNumber
                 Toast.makeText(this, "Logged in as $phone", Toast.LENGTH_SHORT).show()
-                // user is loged in
+                // user is logged in
                 startActivity(Intent(this, DashboardActivity::class.java))
                 finish()
             }
