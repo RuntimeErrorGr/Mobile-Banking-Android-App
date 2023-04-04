@@ -219,7 +219,6 @@ class HomeFragment : Fragment() {
         binding.cvvEditText.text = null
     }
 
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
