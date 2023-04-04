@@ -64,16 +64,29 @@
             android:hint="CVV"
             android:inputType="numberPassword" />
 
+    <LinearLayout
+        android:id="@+id/expirationDateLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
         <Button
             android:id="@+id/dateEditText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/white"
-            android:elevation="80dp"
             android:hint="Pick expiration date"
             android:inputType="date"
             android:textColor="@color/black" />
 
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:elevation="80dp"
+            android:src="@drawable/visa"/>
+    </LinearLayout>
 
         <LinearLayout
             android:id="@+id/buttonLayout"
@@ -86,22 +99,23 @@
             app:layout_constraintTop_toBottomOf="@id/dateEditText">
 
             <Button
-                android:id="@+id/saveButton"
+                android:id="@+id/cancelButton"
                 android:layout_width="5dp"
                 android:layout_height="50dp"
                 android:layout_weight="1"
-                android:text="Save" />
+                android:text="Cancel" />
 
             <Space
                 android:layout_width="16dp"
                 android:layout_height="wrap_content" />
 
             <Button
-                android:id="@+id/cancelButton"
+                android:id="@+id/saveButton"
                 android:layout_width="5dp"
                 android:layout_height="50dp"
                 android:layout_weight="1"
-                android:text="Cancel" />
+                android:text="Save" />
+
         </LinearLayout>
 
     </LinearLayout>

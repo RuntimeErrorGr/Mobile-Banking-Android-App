@@ -4,15 +4,21 @@ import android.content.Intent
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import eim.project.mobile_banking_android_app.MainActivity
 import eim.project.mobile_banking_android_app.databinding.FragmentHomeBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.util.*
 
 class HomeFragment : Fragment() {
@@ -57,9 +63,24 @@ class HomeFragment : Fragment() {
         }
 
         binding.saveButton.setOnClickListener() {
-            sendCardDetailsToDatabase()
-        }
+            lifecycleScope.launch {
+                // Get the reference card with data from the UI
+                val card = getCardDetailsFromUI()
 
+                // Find a matching card in the database and update its user field
+                val matchingCard = withContext(Dispatchers.IO) {
+                    findMatchingCard(card)
+                }
+
+                // If a matching card was found, show a success message to the user
+                if (matchingCard != null) {
+                    Toast.makeText(requireContext(), "Card saved successfully!", Toast.LENGTH_SHORT).show()
+                } else {
+                    // If no matching card was found, show an error message to the user
+                    Toast.makeText(requireContext(), "No matching card found.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
         return root
     }
 
@@ -79,24 +100,48 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun sendCardDetailsToDatabase() {
-        val database = FirebaseDatabase.getInstance()
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        val cardsRef = database.getReference("users/${currentUser?.uid}/cards")
-
+    private fun getCardDetailsFromUI(): Card? {
         val cardNumber = binding.numberEditText.text.toString()
         val nameOnCard = binding.nameEditText.text.toString()
         val expirationDate = binding.dateEditText.text.toString()
         val cvv = binding.cvvEditText.text.toString()
+        var card: Card? = null
 
         if (validateCardDetalisInput(cardNumber, nameOnCard, expirationDate, cvv)) {
-            val card = Card(cardNumber, nameOnCard, expirationDate, cvv)
-            cardsRef.push().setValue(card)
+            card = Card(cardNumber, nameOnCard, expirationDate, cvv)
             binding.popupLayout.visibility = View.GONE
             binding.addCreditCardBtn.isEnabled = true
-            resetFields()
-            Toast.makeText(requireContext(), "Card successfully added!", Toast.LENGTH_SHORT).show()
+            resetCardFormFields()
         }
+        return card
+    }
+
+    private suspend fun findMatchingCard(card: Card?): Card? = withContext(Dispatchers.IO) {
+        val database = FirebaseDatabase.getInstance()
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val cardsRef = database.getReference("cards")
+        val usersRef = database.getReference("users")
+        val query = cardsRef.orderByChild("user").equalTo("")
+        val snapshot = query.get().await()
+        val cards = snapshot.children.mapNotNull { it.getValue(Card::class.java) }
+
+        if (card == null)
+            return@withContext null
+
+        cards.find { it.number == card.number &&
+                it.nameOnCard == card.nameOnCard &&
+                it.expirationDate == card.expirationDate &&
+                it.cvv == card.cvv
+                }
+            ?.also { matchingCard ->
+                Log.d("HomeFragment", "Found matching card: ${matchingCard.nameOnCard}")
+                val matchingCardRef = snapshot.children.first { it.getValue(Card::class.java) == matchingCard }.ref
+                matchingCardRef.child("user").setValue(currentUser?.uid ?: "")
+                usersRef.child(currentUser?.uid ?: "").apply {
+                    child("cards").push().setValue(matchingCardRef.key)
+                    child("phoneNumber").setValue(currentUser?.phoneNumber)
+                }
+            }
     }
 
     private fun validateCardDetalisInput(
@@ -167,7 +212,7 @@ class HomeFragment : Fragment() {
         binding.dateEditText.text = formattedDate
     }
 
-    private fun resetFields() {
+    private fun resetCardFormFields() {
         binding.numberEditText.text = null
         binding.nameEditText.text = null
         binding.dateEditText.text = null
