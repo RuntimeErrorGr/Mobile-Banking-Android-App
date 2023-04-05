@@ -1,5 +1,6 @@
 package eim.project.mobile_banking_android_app.home.home
 
+import android.content.Context
 import android.content.Intent
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
@@ -11,8 +12,12 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import eim.project.mobile_banking_android_app.MainActivity
 import eim.project.mobile_banking_android_app.databinding.FragmentHomeBinding
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +34,13 @@ class HomeFragment : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
+    private lateinit var adapter: CardAdapter
+    private var context: Context? = null
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        this.context = context
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,6 +50,8 @@ class HomeFragment : Fragment() {
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
+        binding.recicleView.layoutManager = LinearLayoutManager(requireContext())
+
         binding.popupLayout.visibility = View.GONE
 
         firebaseAuth = FirebaseAuth.getInstance()
@@ -81,6 +95,8 @@ class HomeFragment : Fragment() {
                 }
             }
         }
+
+        loadCardsList()
         return root
     }
 
@@ -219,8 +235,56 @@ class HomeFragment : Fragment() {
         binding.cvvEditText.text = null
     }
 
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
+
+    private fun loadCardsList() {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val database = FirebaseDatabase.getInstance().reference
+        val userCardsRef = database.child("users").child(currentUser?.uid ?: "").child("cards")
+
+        // Attach a value event listener to the user cards node to get the list of card IDs
+        userCardsRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val cardsList = ArrayList<Card>()
+
+                // Iterate through the list of card IDs and fetch each card from the /cards node
+                for (cardIdSnapshot in snapshot.children) {
+                    val cardId = cardIdSnapshot.value ?: ""
+                    val cardRef = database.child("cards").child(cardId as String)
+                    cardRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(cardSnapshot: DataSnapshot) {
+                            // Create a new Card object and add it to the list
+                            val card = cardSnapshot.getValue(Card::class.java)
+                            if (card != null) {
+                                Log.d("HomeFragment", "Found card: ${card.nameOnCard}")
+                                cardsList.add(card)
+
+                                // Notify the adapter that new data has been added
+                                adapter.notifyDataSetChanged()
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            // Handle any errors here
+                        }
+                    })
+                }
+
+                adapter = CardAdapter(requireContext(), cardsList)
+                binding.recicleView.adapter = adapter
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Handle any errors here
+            }
+        })
+    }
+
+
+
+
 }

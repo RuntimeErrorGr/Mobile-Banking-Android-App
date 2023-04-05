@@ -9,18 +9,6 @@
     android:paddingTop="?attr/actionBarSize"
     tools:context=".DashboardActivity">
 
-    <TextView
-        android:id="@+id/textViewDashboard"
-        android:textColor="@color/black"
-        android:text="Default text"
-        android:gravity="center"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/nav_view"
         android:layout_width="0dp"
