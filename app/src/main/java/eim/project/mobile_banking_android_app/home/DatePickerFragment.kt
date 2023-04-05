@@ -1,4 +1,4 @@
-package eim.project.mobile_banking_android_app.home.home
+package eim.project.mobile_banking_android_app.home
 
 import android.app.DatePickerDialog
 import android.app.Dialog

@@ -1,4 +1,4 @@
-package eim.project.mobile_banking_android_app.home.home
+package eim.project.mobile_banking_android_app.home
 
 import android.content.Context
 import android.content.Intent
@@ -299,7 +299,6 @@ class HomeFragment : Fragment() {
                     })
                 }
                 .setNegativeButton("No") { _, _ ->
-                    // Undo swipe
                     adapter.notifyItemChanged(position)
                 }
             val alert = builder.create()

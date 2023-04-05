@@ -1,13 +1,15 @@
-package eim.project.mobile_banking_android_app.home.home
+package eim.project.mobile_banking_android_app.home
 
-class Card(
+data class Card(
     val number: String,
     val nameOnCard: String,
     val expirationDate: String,
     val cvv: String,
     val sold: Double = 0.0,
     var currency: String = "RON",
-    var user: String = ""
+    var user: String = "",
+    var currentCont: Cont? = null,
+    var masked: Boolean = true
 ) {
     constructor() : this("", "", "", "", 0.0, "RON", "")
 

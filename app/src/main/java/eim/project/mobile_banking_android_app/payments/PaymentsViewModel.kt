@@ -1,4 +1,4 @@
-package eim.project.mobile_banking_android_app.home.payments
+package eim.project.mobile_banking_android_app.payments
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
