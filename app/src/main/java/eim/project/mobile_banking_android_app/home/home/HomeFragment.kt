@@ -10,9 +10,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -236,7 +239,7 @@ class HomeFragment : Fragment() {
                 val cardsList = snapshot.children.mapNotNull { it.getValue(Card::class.java) }
                 adapter = CardAdapter(requireContext(), cardsList as ArrayList<Card>)
                 binding.recicleView.adapter = adapter
-
+                itemTouchHelper.attachToRecyclerView(binding.recicleView)
                 if (cardsList.isEmpty()) {
                     binding.recicleView.visibility = View.GONE
                     binding.noCardsTextView.visibility = View.VISIBLE
@@ -252,6 +255,58 @@ class HomeFragment : Fragment() {
         }
         cardsRef.addValueEventListener(listener)
     }
+
+    val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+        override fun onMove(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            target: RecyclerView.ViewHolder
+        ): Boolean {
+            // Do nothing, since we're not interested in moving items in the list
+            return false
+        }
+
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+            val position = viewHolder.adapterPosition
+            val deletedCard = adapter.cards[position]
+
+            // Show dialog box
+            val builder = context?.let { AlertDialog.Builder(it) }
+            builder!!.setMessage("Are you sure you want to delete this card?")
+                .setCancelable(false)
+                .setPositiveButton("Yes") { dialog, id ->
+                    // Delete card from RecyclerView
+                    adapter.cards.removeAt(position)
+                    adapter.notifyItemRemoved(position)
+
+                    // Delete card from Firebase
+                    val database = FirebaseDatabase.getInstance()
+                    val currentUser = FirebaseAuth.getInstance().currentUser
+                    val cardsRef = database.getReference("users").child(currentUser?.uid ?: "").child("cards")
+                    val query = cardsRef.orderByChild("number").equalTo(deletedCard.number)
+                    query.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            if (snapshot.exists()) {
+                                for (cardSnapshot in snapshot.children) {
+                                    cardSnapshot.ref.removeValue()
+                                }
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            Log.e("HomeFragment", "Failed to delete card: ${error.message}")
+                        }
+                    })
+                }
+                .setNegativeButton("No") { _, _ ->
+                    // Undo swipe
+                    adapter.notifyItemChanged(position)
+                }
+            val alert = builder.create()
+            alert.show()
+        }
+
+    })
 
 
 }

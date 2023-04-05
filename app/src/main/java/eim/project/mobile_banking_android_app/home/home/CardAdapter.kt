@@ -13,7 +13,8 @@ class CardAdapter : RecyclerView.Adapter<CardAdapter.CardHolder> {
 
     private lateinit var binding: ItemCardBinding
     private var context: Context
-    private var cards: ArrayList<Card>
+    var cards: ArrayList<Card>
+
 
     constructor(context: Context, cards: ArrayList<Card>) : super() {
         this.context = context
