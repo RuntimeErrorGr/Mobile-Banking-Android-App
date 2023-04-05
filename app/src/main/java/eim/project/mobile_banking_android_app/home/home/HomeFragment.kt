@@ -80,18 +80,9 @@ class HomeFragment : Fragment() {
             lifecycleScope.launch {
                 // Get the reference card with data from the UI
                 val card = getCardDetailsFromUI()
-
-                // Find a matching card in the database and update its user field
-                val matchingCard = withContext(Dispatchers.IO) {
-                    findMatchingCard(card)
-                }
-
-                // If a matching card was found, show a success message to the user
-                if (matchingCard != null) {
-                    Toast.makeText(requireContext(), "Card saved successfully!", Toast.LENGTH_SHORT).show()
-                } else {
-                    // If no matching card was found, show an error message to the user
-                    Toast.makeText(requireContext(), "No matching card found.", Toast.LENGTH_SHORT).show()
+                // Add card in the database
+                withContext(Dispatchers.IO) {
+                    addCardToDatabase(card)
                 }
             }
         }
@@ -132,32 +123,28 @@ class HomeFragment : Fragment() {
         return card
     }
 
-    private suspend fun findMatchingCard(card: Card?): Card? = withContext(Dispatchers.IO) {
+    private suspend fun addCardToDatabase(card: Card?): Boolean = withContext(Dispatchers.IO) {
         val database = FirebaseDatabase.getInstance()
         val currentUser = FirebaseAuth.getInstance().currentUser
-        val cardsRef = database.getReference("cards")
-        val usersRef = database.getReference("users")
-        val query = cardsRef.orderByChild("user").equalTo("")
-        val snapshot = query.get().await()
-        val cards = snapshot.children.mapNotNull { it.getValue(Card::class.java) }
+        val usersRef = database.getReference("users").child(currentUser?.uid ?: "")
+        val cardsQuery = usersRef.child("cards").orderByChild("number").equalTo(card?.number ?: "")
+        val snapshot = cardsQuery.get().await()
 
-        if (card == null)
-            return@withContext null
+        if (card == null) {
+            return@withContext false
+        }
 
-        cards.find { it.number == card.number &&
-                it.nameOnCard == card.nameOnCard &&
-                it.expirationDate == card.expirationDate &&
-                it.cvv == card.cvv
-                }
-            ?.also { matchingCard ->
-                Log.d("HomeFragment", "Found matching card: ${matchingCard.nameOnCard}")
-                val matchingCardRef = snapshot.children.first { it.getValue(Card::class.java) == matchingCard }.ref
-                matchingCardRef.child("user").setValue(currentUser?.uid ?: "")
-                usersRef.child(currentUser?.uid ?: "").apply {
-                    child("cards").push().setValue(matchingCardRef.key)
-                    child("phoneNumber").setValue(currentUser?.phoneNumber)
-                }
-            }
+        if (!snapshot.exists()) {
+            card.user = currentUser?.uid ?: ""
+            usersRef.child("phoneNumber").setValue(currentUser?.phoneNumber)
+            val newCardRef = usersRef.child("cards").push()
+            newCardRef.setValue(card)
+            Log.d("HomeFragment", "New card added: ${card.nameOnCard}")
+            return@withContext true
+        } else {
+            Log.d("HomeFragment", "Card already exists: ${card.nameOnCard}")
+            return@withContext false
+        }
     }
 
     private fun validateCardDetalisInput(
@@ -235,56 +222,36 @@ class HomeFragment : Fragment() {
         binding.cvvEditText.text = null
     }
 
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
     private fun loadCardsList() {
+        val database = FirebaseDatabase.getInstance()
         val currentUser = FirebaseAuth.getInstance().currentUser
-        val database = FirebaseDatabase.getInstance().reference
-        val userCardsRef = database.child("users").child(currentUser?.uid ?: "").child("cards")
-
-        // Attach a value event listener to the user cards node to get the list of card IDs
-        userCardsRef.addValueEventListener(object : ValueEventListener {
+        val cardsRef = database.getReference("users").child(currentUser?.uid ?: "").child("cards")
+        val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val cardsList = ArrayList<Card>()
-
-                // Iterate through the list of card IDs and fetch each card from the /cards node
-                for (cardIdSnapshot in snapshot.children) {
-                    val cardId = cardIdSnapshot.value ?: ""
-                    val cardRef = database.child("cards").child(cardId as String)
-                    cardRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(cardSnapshot: DataSnapshot) {
-                            // Create a new Card object and add it to the list
-                            val card = cardSnapshot.getValue(Card::class.java)
-                            if (card != null) {
-                                Log.d("HomeFragment", "Found card: ${card.nameOnCard}")
-                                cardsList.add(card)
-
-                                // Notify the adapter that new data has been added
-                                adapter.notifyDataSetChanged()
-                            }
-                        }
-
-                        override fun onCancelled(error: DatabaseError) {
-                            // Handle any errors here
-                        }
-                    })
-                }
-
-                adapter = CardAdapter(requireContext(), cardsList)
+                val cardsList = snapshot.children.mapNotNull { it.getValue(Card::class.java) }
+                adapter = CardAdapter(requireContext(), cardsList as ArrayList<Card>)
                 binding.recicleView.adapter = adapter
+
+                if (cardsList.isEmpty()) {
+                    binding.recicleView.visibility = View.GONE
+                    binding.noCardsTextView.visibility = View.VISIBLE
+                } else {
+                    binding.recicleView.visibility = View.VISIBLE
+                    binding.noCardsTextView.visibility = View.GONE
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Handle any errors here
+                Log.e("HomeFragment", "Failed to observe cards: ${error.message}")
             }
-        })
+        }
+        cardsRef.addValueEventListener(listener)
     }
-
-
 
 
 }

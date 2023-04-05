@@ -8,11 +8,9 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import eim.project.mobile_banking_android_app.databinding.ActivityDashboardBinding
-import kotlinx.coroutines.Job
 
 class DashboardActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDashboardBinding
-    private lateinit var checkForNewCardsJob: Job
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

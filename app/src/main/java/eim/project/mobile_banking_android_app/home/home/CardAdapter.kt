@@ -26,7 +26,6 @@ class CardAdapter : RecyclerView.Adapter<CardAdapter.CardHolder> {
         val card_number = binding.cardNumber
         val card_holder_name = binding.cardHolderName
         val card_expiration_date = binding.expiryDate
-        val card_cvv = binding.cvv
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CardHolder {
@@ -58,13 +57,10 @@ class CardAdapter : RecyclerView.Adapter<CardAdapter.CardHolder> {
         val cardNumber = card.number
         val cardHolderName = card.nameOnCard
         val cardExpirationDate = card.expirationDate
-        val cardCvv = card.cvv
 
         //Set data
         holder.card_number.text = cardNumber.chunked(4).joinToString(" ")
         holder.card_holder_name.text = cardHolderName
         holder.card_expiration_date.text = cardExpirationDate
-        holder.card_cvv.text = cardCvv
-
     }
 }
