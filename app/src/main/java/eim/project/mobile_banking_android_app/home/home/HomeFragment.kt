@@ -274,7 +274,7 @@ class HomeFragment : Fragment() {
             val builder = context?.let { AlertDialog.Builder(it) }
             builder!!.setMessage("Are you sure you want to delete this card?")
                 .setCancelable(false)
-                .setPositiveButton("Yes") { dialog, id ->
+                .setPositiveButton("Yes") { _, _ ->
                     // Delete card from RecyclerView
                     adapter.cards.removeAt(position)
                     adapter.notifyItemRemoved(position)

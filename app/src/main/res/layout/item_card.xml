@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="200dp"
     android:layout_margin="8dp"
+
     app:cardCornerRadius="16dp"
     app:cardElevation="24dp"
     app:contentPadding="16dp">
@@ -12,7 +13,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
+        android:background="@drawable/cardbackground"
         android:orientation="vertical"
         android:padding="16dp">
 

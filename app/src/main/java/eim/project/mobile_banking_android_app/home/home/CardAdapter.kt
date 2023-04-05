@@ -1,8 +1,7 @@
 package eim.project.mobile_banking_android_app.home.home
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
+import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,6 +26,7 @@ class CardAdapter : RecyclerView.Adapter<CardAdapter.CardHolder> {
         val card_number = binding.cardNumber
         val card_holder_name = binding.cardHolderName
         val card_expiration_date = binding.expiryDate
+        val card_expirtaion_date_label = binding.expiryDateLabel
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CardHolder {
@@ -48,20 +48,22 @@ class CardAdapter : RecyclerView.Adapter<CardAdapter.CardHolder> {
         * Set data
         * handle click
         * */
-        binding.expiryDate.visibility = View.GONE
-        binding.cardChip.visibility = View.GONE
-        binding.expiryDateLabel.visibility = View.GONE
-        binding.cardNumber.visibility = View.GONE
-        binding.cardHolderName.visibility = View.GONE
+        // Hide text views and show progress bar
         holder.progress_bar.visibility = View.VISIBLE
-        Handler(Looper.getMainLooper()).postDelayed({
-            holder.progress_bar.visibility = View.GONE
-            binding.cardHolderName.visibility = View.VISIBLE
-            binding.cardNumber.visibility = View.VISIBLE
-            binding.expiryDate.visibility = View.VISIBLE
-            binding.expiryDateLabel.visibility = View.VISIBLE
-            binding.cardChip.visibility = View.VISIBLE
-        }, 1500)
+        holder.card_number.visibility = View.INVISIBLE
+        holder.card_holder_name.visibility = View.INVISIBLE
+        holder.card_expiration_date.visibility = View.INVISIBLE
+        holder.card_expirtaion_date_label.visibility = View.INVISIBLE
+        object : CountDownTimer(1500, 1500) {
+            override fun onTick(millisUntilFinished: Long) {}
+            override fun onFinish() {
+                holder.progress_bar.visibility = View.INVISIBLE
+                holder.card_number.visibility = View.VISIBLE
+                holder.card_holder_name.visibility = View.VISIBLE
+                holder.card_expiration_date.visibility = View.VISIBLE
+                holder.card_expirtaion_date_label.visibility = View.VISIBLE
+            }
+        }.start()
 
         // Get data
         val card = cards[position]
