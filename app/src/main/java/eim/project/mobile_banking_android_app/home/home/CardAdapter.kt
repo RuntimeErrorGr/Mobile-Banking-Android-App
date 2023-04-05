@@ -48,9 +48,19 @@ class CardAdapter : RecyclerView.Adapter<CardAdapter.CardHolder> {
         * Set data
         * handle click
         * */
+        binding.expiryDate.visibility = View.GONE
+        binding.cardChip.visibility = View.GONE
+        binding.expiryDateLabel.visibility = View.GONE
+        binding.cardNumber.visibility = View.GONE
+        binding.cardHolderName.visibility = View.GONE
         holder.progress_bar.visibility = View.VISIBLE
         Handler(Looper.getMainLooper()).postDelayed({
             holder.progress_bar.visibility = View.GONE
+            binding.cardHolderName.visibility = View.VISIBLE
+            binding.cardNumber.visibility = View.VISIBLE
+            binding.expiryDate.visibility = View.VISIBLE
+            binding.expiryDateLabel.visibility = View.VISIBLE
+            binding.cardChip.visibility = View.VISIBLE
         }, 1500)
 
         // Get data
@@ -64,4 +74,5 @@ class CardAdapter : RecyclerView.Adapter<CardAdapter.CardHolder> {
         holder.card_holder_name.text = cardHolderName
         holder.card_expiration_date.text = cardExpirationDate
     }
+
 }
