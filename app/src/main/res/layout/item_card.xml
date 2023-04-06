@@ -7,7 +7,7 @@
     android:layout_margin="8dp"
 
     app:cardCornerRadius="16dp"
-    app:cardElevation="24dp"
+    app:cardElevation="14dp"
     app:contentPadding="16dp">
 
     <RelativeLayout

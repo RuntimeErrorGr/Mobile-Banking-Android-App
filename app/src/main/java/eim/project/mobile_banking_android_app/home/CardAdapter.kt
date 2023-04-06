@@ -31,13 +31,6 @@ class CardAdapter : RecyclerView.Adapter<CardAdapter.CardHolder> {
         val cvv_label = binding.cvvLabel
         val cvv = binding.cvv
 
-        fun bind(card: Card) {
-            card_number.text = maskCardNumber(card.number)
-            card_holder_name.text = maskName(card.nameOnCard)
-            card_expiration_date.text = maskExpirationDate()
-            card_expirtaion_date_label.visibility = View.VISIBLE
-        }
-
         init {
             itemView.setOnClickListener {
                 val card = cards[adapterPosition]

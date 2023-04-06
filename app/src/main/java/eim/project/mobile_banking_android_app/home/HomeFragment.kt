@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -21,19 +20,17 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import eim.project.mobile_banking_android_app.CardDetailsActivity
 import eim.project.mobile_banking_android_app.MainActivity
+import eim.project.mobile_banking_android_app.databinding.DialogAddCardBinding
 import eim.project.mobile_banking_android_app.databinding.FragmentHomeBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 import java.util.*
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private lateinit var firebaseAuth: FirebaseAuth
-
+    private lateinit var dialogView: DialogAddCardBinding
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
@@ -54,9 +51,7 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
         binding.recicleView.layoutManager = LinearLayoutManager(requireContext())
-
-        binding.popupLayout.visibility = View.GONE
-
+        dialogView = DialogAddCardBinding.inflate(layoutInflater)
         firebaseAuth = FirebaseAuth.getInstance()
         checkUser()
 
@@ -65,29 +60,35 @@ class HomeFragment : Fragment() {
             checkUser()
         }
 
-        binding.dateEditText.setOnClickListener {
-            showDatePicker()
-        }
+        binding.addCreditCardBtn.setOnClickListener {
 
-        binding.addCreditCardBtn.setOnClickListener() {
-            binding.popupLayout.visibility = View.VISIBLE
-            binding.addCreditCardBtn.isEnabled = false
-        }
+            dialogView.dateEditText.setOnClickListener {
+                showDatePicker()
+            }
 
-        binding.cancelButton.setOnClickListener() {
-            binding.popupLayout.visibility = View.GONE
-            binding.addCreditCardBtn.isEnabled = true
-        }
+            dialogView.root.parent?.let { (it as ViewGroup).removeAllViews() }
+            val builder = AlertDialog.Builder(requireContext())
+            builder.setView(dialogView.root)
+            builder.setPositiveButton("Add", null)
+            builder.setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            val dialog = builder.create()
+            dialog.setOnShowListener {
+                val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                positiveButton.setOnClickListener {
+                    val cardNumber = dialogView.numberEditText.text.toString()
+                    val nameOnCard = dialogView.nameEditText.text.toString()
+                    val expirationDate = dialogView.dateEditText.text.toString()
+                    val cvv = dialogView.cvvEditText.text.toString()
 
-        binding.saveButton.setOnClickListener() {
-            lifecycleScope.launch {
-                // Get the reference card with data from the UI
-                val card = getCardDetailsFromUI()
-                // Add card in the database
-                withContext(Dispatchers.IO) {
-                    addCardToDatabase(card)
+                    if (validateCardDetalisInput(cardNumber, nameOnCard, expirationDate, cvv)) {
+                        val card = Card(cardNumber, nameOnCard, expirationDate, cvv)
+                        addCardToDatabase(card, dialog)
+                    }
                 }
             }
+            dialog.show()
         }
 
         loadCardsList()
@@ -110,45 +111,35 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun getCardDetailsFromUI(): Card? {
-        val cardNumber = binding.numberEditText.text.toString()
-        val nameOnCard = binding.nameEditText.text.toString()
-        val expirationDate = binding.dateEditText.text.toString()
-        val cvv = binding.cvvEditText.text.toString()
-        var card: Card? = null
-
-        if (validateCardDetalisInput(cardNumber, nameOnCard, expirationDate, cvv)) {
-            card = Card(cardNumber, nameOnCard, expirationDate, cvv)
-            binding.popupLayout.visibility = View.GONE
-            binding.addCreditCardBtn.isEnabled = true
-            resetCardFormFields()
-        }
-        return card
-    }
-
-    private suspend fun addCardToDatabase(card: Card?): Boolean = withContext(Dispatchers.IO) {
-        val database = FirebaseDatabase.getInstance()
+    private fun addCardToDatabase(card: Card, dialog: AlertDialog) {
         val currentUser = FirebaseAuth.getInstance().currentUser
-        val usersRef = database.getReference("users").child(currentUser?.uid ?: "")
-        val cardsQuery = usersRef.child("cards").orderByChild("number").equalTo(card?.number ?: "")
-        val snapshot = cardsQuery.get().await()
-
-        if (card == null) {
-            return@withContext false
-        }
-
-        if (!snapshot.exists()) {
-            card.user = currentUser?.uid ?: ""
-            usersRef.child("phoneNumber").setValue(currentUser?.phoneNumber)
-            val newCardRef = usersRef.child("cards").push()
-            newCardRef.setValue(card)
-            Log.d("HomeFragment", "New card added: ${card.nameOnCard}")
-            return@withContext true
-        } else {
-            Log.d("HomeFragment", "Card already exists: ${card.nameOnCard}")
-            return@withContext false
-        }
+        val cardsRef = FirebaseDatabase.getInstance().getReference("users/${currentUser?.uid}/cards")
+        val query = cardsRef.orderByChild("number").equalTo(card.number)
+        query.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                var successfulUpdate = false
+                if (dataSnapshot.exists()) {
+                    // a card with this number already exists in the database
+                    Toast.makeText(requireContext(), "A card with this number already exists", Toast.LENGTH_SHORT).show()
+                } else {
+                    // add the card to the database
+                    val cardId = cardsRef.push().key
+                    if (cardId != null) {
+                        cardsRef.child(cardId).setValue(card)
+                        Toast.makeText(requireContext(), "Card successfully registered", Toast.LENGTH_SHORT).show()
+                        successfulUpdate = true
+                    }
+                }
+                if (successfulUpdate) {
+                    dialog.dismiss()
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+        })
     }
+
 
     private fun validateCardDetalisInput(
         cardNumber: String,
@@ -157,10 +148,26 @@ class HomeFragment : Fragment() {
         cvv: String
     ): Boolean {
         // Validate that all fields are not empty
-        if (cardNumber.isEmpty() || nameOnCard.isEmpty() || expirationDate.isEmpty() || cvv.isEmpty()) {
-            Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
+        if (cardNumber.isEmpty()) {
+            Toast.makeText(requireContext(), "Please fill in cardNumber", Toast.LENGTH_SHORT).show()
             return false
         }
+        if (nameOnCard.isEmpty()) {
+            Toast.makeText(requireContext(), "Please fill in nameOnCard", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (expirationDate.isEmpty()) {
+            Toast.makeText(requireContext(), "Please fill in expirationDate", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (cvv.isEmpty()) {
+            Toast.makeText(requireContext(), "Please fill in cvv", Toast.LENGTH_SHORT).show()
+            return false
+        }
+//        if (cardNumber.isEmpty() || nameOnCard.isEmpty() || expirationDate.isEmpty() || cvv.isEmpty()) {
+//            Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
+//            return false
+//        }
 
         // Validate the card number has 16 digits
         val cardNumberRegex = Regex("\\d{16}")
@@ -215,14 +222,7 @@ class HomeFragment : Fragment() {
             set(Calendar.MONTH, month)
         }
         val formattedDate = SimpleDateFormat("MM/yy", Locale.US).format(selectedDate.time)
-        binding.dateEditText.text = formattedDate
-    }
-
-    private fun resetCardFormFields() {
-        binding.numberEditText.text = null
-        binding.nameEditText.text = null
-        binding.dateEditText.text = null
-        binding.cvvEditText.text = null
+        dialogView.dateEditText.text = formattedDate
     }
 
     override fun onDestroyView() {
@@ -256,7 +256,9 @@ class HomeFragment : Fragment() {
         cardsRef.addValueEventListener(listener)
     }
 
-    val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+
+    val itemTouchHelper = ItemTouchHelper(object :
+        ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
         override fun onMove(
             recyclerView: RecyclerView,
             viewHolder: RecyclerView.ViewHolder,
@@ -268,44 +270,59 @@ class HomeFragment : Fragment() {
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
             val position = viewHolder.adapterPosition
-            val deletedCard = adapter.cards[position]
+            val card = adapter.cards[position]
 
-            // Show dialog box
-            val builder = context?.let { AlertDialog.Builder(it) }
-            builder!!.setMessage("Are you sure you want to delete this card?")
-                .setCancelable(false)
-                .setPositiveButton("Yes") { _, _ ->
-                    // Delete card from RecyclerView
-                    adapter.cards.removeAt(position)
-                    adapter.notifyItemRemoved(position)
+            if (direction == ItemTouchHelper.LEFT) {
+                // Show dialog box to confirm card deletion
+                val builder = context?.let { AlertDialog.Builder(it) }
+                builder!!.setMessage("Are you sure you want to delete this card?")
+                    .setCancelable(false)
+                    .setPositiveButton("Yes") { _, _ ->
+                        // Delete card from RecyclerView
+                        adapter.cards.removeAt(position)
+                        adapter.notifyItemRemoved(position)
 
-                    // Delete card from Firebase
-                    val database = FirebaseDatabase.getInstance()
-                    val currentUser = FirebaseAuth.getInstance().currentUser
-                    val cardsRef = database.getReference("users").child(currentUser?.uid ?: "").child("cards")
-                    val query = cardsRef.orderByChild("number").equalTo(deletedCard.number)
-                    query.addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            if (snapshot.exists()) {
-                                for (cardSnapshot in snapshot.children) {
-                                    cardSnapshot.ref.removeValue()
+                        // Delete card from Firebase
+                        val database = FirebaseDatabase.getInstance()
+                        val currentUser = FirebaseAuth.getInstance().currentUser
+                        val cardsRef = database.getReference("users").child(currentUser?.uid ?: "")
+                            .child("cards")
+                        val query = cardsRef.orderByChild("number").equalTo(card.number)
+                        query.addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                if (snapshot.exists()) {
+                                    for (cardSnapshot in snapshot.children) {
+                                        cardSnapshot.ref.removeValue()
+                                    }
                                 }
                             }
-                        }
 
-                        override fun onCancelled(error: DatabaseError) {
-                            Log.e("HomeFragment", "Failed to delete card: ${error.message}")
-                        }
-                    })
+                            override fun onCancelled(error: DatabaseError) {
+                                Log.e("HomeFragment", "Failed to delete card: ${error.message}")
+                            }
+                        })
+                    }
+                    .setNegativeButton("No") { _, _ ->
+                        adapter.notifyItemChanged(position)
+                    }
+                val alert = builder.create()
+                alert.show()
+            } else if (direction == ItemTouchHelper.RIGHT) {
+                val intent = Intent(context, CardDetailsActivity::class.java)
+                val bundle = Bundle().apply {
+                    putString("number", card.number)
+                    putString("name", card.nameOnCard)
+                    putString("expiryDate", card.expirationDate)
+                    putString("cvv", card.cvv)
                 }
-                .setNegativeButton("No") { _, _ ->
-                    adapter.notifyItemChanged(position)
-                }
-            val alert = builder.create()
-            alert.show()
+                intent.putExtras(bundle)
+                context?.startActivity(intent)
+            }
         }
-
     })
 
-
+    override fun onResume() {
+        super.onResume()
+        loadCardsList()
+    }
 }

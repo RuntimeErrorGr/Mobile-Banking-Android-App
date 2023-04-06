@@ -6,7 +6,8 @@ data class Card(
     val expirationDate: String,
     val cvv: String,
     var user: String = "",
-    var currentSavingsAccount: SavingsAccount = SavingsAccount(cardNumber=number, isCurrentCont = true),
+    var pin: String = "1234",
+    var currentSavingsAccount: SavingsAccount = SavingsAccount(cardNumber=number, isCurrent = true),
     var masked: Boolean = true
 ) {
     constructor() : this("", "", "", "", "")
