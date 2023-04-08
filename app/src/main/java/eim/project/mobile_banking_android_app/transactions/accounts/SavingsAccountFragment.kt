@@ -16,7 +16,9 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -159,7 +161,7 @@ class SavingsAccountFragment : Fragment() {
                 val mainAccountSold = mainAccountSnapshot?.child("sold")?.getValue(Double::class.java) ?: 0.0
 
                 val savingsAccountsRef = mainAccountSnapshot?.ref?.parent
-                val accountNumber = mainAccountSnapshot?.key?.toInt()?.plus(1).toString()
+                val accountNumber = dataSnapshot.children.firstOrNull()?.child("savingsAccounts")?.children?.last()?.key?.toInt()?.plus(1).toString()
 
                 if (account.isDeposit && account.sold > mainAccountSold) {
                     Toast.makeText(context, "Deposit account's sold value is greater than the main account's sold value", Toast.LENGTH_SHORT).show()
@@ -209,6 +211,7 @@ class SavingsAccountFragment : Fragment() {
                     }
                     adapter = SavingsAccountAdapter(requireContext(), savingsAccountList)
                     binding.recicleView.adapter = adapter
+                    itemTouchHelper.attachToRecyclerView(binding.recicleView)
                 }
             }
 
@@ -237,4 +240,32 @@ class SavingsAccountFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+
+    val itemTouchHelper = ItemTouchHelper(object :
+        ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+        override fun onMove(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            target: RecyclerView.ViewHolder
+        ): Boolean {
+            // Do nothing, since we're not interested in moving items in the list
+            return false
+        }
+
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+            val position = viewHolder.adapterPosition
+            val account = adapter.accounts[position]
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            val database = FirebaseDatabase.getInstance()
+            val cardsRef = database.getReference("/users/${currentUser?.uid}/cards")
+
+            if (position == 0) {
+                adapter.notifyItemChanged(position)
+                return
+            }
+            val query = cardsRef.orderByChild("number").equalTo(cardNumber)
+
+        }
+
+    })
 }

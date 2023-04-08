@@ -84,7 +84,7 @@ class HomeFragment : Fragment() {
                     val cvv = dialogView.cvvEditText.text.toString()
                     if (validateCardDetalisInput(cardNumber, nameOnCard, expirationDate, cvv)) {
                         val card = Card(cardNumber, nameOnCard, expirationDate, cvv)
-                        val iban = "RO${Random().nextInt(999999999)}"
+                        val iban = "RO${(1..14).map { (0..9).random() }.joinToString("")}".padEnd(16, '0')
                         card.savingsAccounts.add(SavingsAccount(iban))
                         addCardToDatabase(card, dialog)
                     }
