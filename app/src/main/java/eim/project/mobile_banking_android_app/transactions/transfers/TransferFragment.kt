@@ -19,13 +19,16 @@ class TransferFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentTransfersBinding.inflate(inflater, container, false)
-        binding.textTv.text = "This is a basic text."
         return binding.root
     }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
         this.context = context
+    }
+
+    override fun onResume() {
+        super.onResume()
     }
 
     override fun onDestroyView() {

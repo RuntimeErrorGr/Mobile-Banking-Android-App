@@ -25,10 +25,9 @@
 
             <TextView
                 android:id="@+id/titleTextview"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
                 android:text="My savings account"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textColor="@color/babyblue"
@@ -36,11 +35,14 @@
 
             <Spinner
                 android:id="@+id/spinner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
+                android:layout_width="35dp"
+                android:gravity="center"
+                android:layout_gravity="center"
+                android:layout_height="match_parent"
                 android:spinnerMode="dropdown" />
+
         </LinearLayout>
+
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -50,19 +52,19 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="0dp"
                 android:text="Balance: "
                 android:textStyle="bold"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/balanceTextview"
-                android:layout_width="0dp"
+                android:layout_width="103dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="$1000.00"
-                android:textStyle="italic"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="italic" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -90,7 +92,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="0dp"
                 android:textStyle="bold"
                 android:text="IBAN: "
                 android:textAppearance="?android:attr/textAppearanceMedium" />

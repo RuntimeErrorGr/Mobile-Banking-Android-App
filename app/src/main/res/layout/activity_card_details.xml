@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -12,14 +13,14 @@
         android:id="@+id/card_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <include
             android:id="@+id/credit_card"
-            layout="@layout/item_card" />
+            layout="@layout/item_card"
+            android:background="@color/white" />
 
     </FrameLayout>
 
@@ -27,26 +28,24 @@
         android:id="@+id/savings_accounts_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
-        android:layout_height="250dp"
+        android:layout_height="0dp"
         app:defaultNavHost="true"
-        app:layout_constraintBottom_toTopOf="@+id/transfers_fragment"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/card_container"
-        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintHeight_percent="0.3"
         app:navGraph="@navigation/accounts_navigation" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/transfers_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_marginBottom="4dp"
+        android:layout_height="0dp"
         app:defaultNavHost="true"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/savings_accounts_fragment"
+        app:layout_constraintHeight_percent="0.4"
         app:navGraph="@navigation/transfers_navigation" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

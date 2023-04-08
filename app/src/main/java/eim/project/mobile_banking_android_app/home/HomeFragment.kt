@@ -90,6 +90,7 @@ class HomeFragment : Fragment() {
                             iban=iban,
                             isMain = true,
                             isDeposit = false,
+                            liquidation_date = "",
                             cardNumber = card.number
                         ))
                         addCardToDatabase(card, dialog)

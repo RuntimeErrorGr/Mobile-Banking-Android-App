@@ -1,5 +1,6 @@
 package eim.project.mobile_banking_android_app.transactions.accounts
 
+import android.annotation.SuppressLint
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.icu.text.SimpleDateFormat
@@ -43,6 +44,11 @@ class SavingsAccountFragment : Fragment() {
         arguments?.let {
             cardNumber = it.getString("currentCardNumber")
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadAccounts()
     }
 
     override fun onAttach(context: Context) {
@@ -90,6 +96,7 @@ class SavingsAccountFragment : Fragment() {
                     val rateMultiplier = BigDecimal((ln((daysDifference / 30.0) + 1) + 1)).setScale(3, RoundingMode.HALF_UP).toDouble()
                     return (0.9 * rateMultiplier).toString().take(6)
                 }
+                @SuppressLint("SetTextI18n")
                 override fun afterTextChanged(s: Editable?) {
                     val depositDate = dialogView.depositDate.text.toString()
                     val depositTimestamp = SimpleDateFormat("dd/MM/yyyy", Locale.US).parse(depositDate)?.time ?: return
