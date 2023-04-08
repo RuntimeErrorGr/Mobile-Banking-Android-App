@@ -23,7 +23,7 @@
             android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/pay_amount_text_view"
+                android:id="@+id/amountTextview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
@@ -33,7 +33,7 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/pay_currency_text_view"
+                android:id="@+id/currencyTextview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
@@ -64,7 +64,7 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/to_label_text_view"
+                android:id="@+id/ibanDestTextview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="To: "
@@ -92,7 +92,7 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/from_label_text_view"
+                android:id="@+id/ibanSrcTextview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="From: "
@@ -120,7 +120,7 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/date_label_text_view"
+                android:id="@+id/dateTextview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Date: "
