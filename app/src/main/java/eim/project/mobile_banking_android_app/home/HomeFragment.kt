@@ -85,7 +85,13 @@ class HomeFragment : Fragment() {
                     if (validateCardDetalisInput(cardNumber, nameOnCard, expirationDate, cvv)) {
                         val card = Card(cardNumber, nameOnCard, expirationDate, cvv)
                         val iban = "RO${(1..14).map { (0..9).random() }.joinToString("")}".padEnd(16, '0')
-                        card.savingsAccounts.add(SavingsAccount(iban))
+                        card.savingsAccounts.add(SavingsAccount(
+                            name="Main account",
+                            iban=iban,
+                            isMain = true,
+                            isDeposit = false,
+                            cardNumber = card.number
+                        ))
                         addCardToDatabase(card, dialog)
                     }
                 }
@@ -98,7 +104,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun showDatePicker() {
-        val datePicker = DatePickerFragment { day, month, year -> onDateSelected(day, month, year) }
+        val datePicker = DatePickerFragment { _, month, year -> onDateSelected(month, year) }
         datePicker.show(parentFragmentManager, "datePicker")
     }
 
@@ -218,7 +224,7 @@ class HomeFragment : Fragment() {
         return true
     }
 
-    private fun onDateSelected(day: Int, month: Int, year: Int) {
+    private fun onDateSelected(month: Int, year: Int) {
         val selectedDate = Calendar.getInstance().apply {
             set(Calendar.YEAR, year)
             set(Calendar.MONTH, month)
@@ -277,7 +283,8 @@ class HomeFragment : Fragment() {
             if (direction == ItemTouchHelper.LEFT) {
                 // Show dialog box to confirm card deletion
                 val builder = context?.let { AlertDialog.Builder(it) }
-                builder!!.setMessage("Are you sure you want to delete this card?")
+                builder!!.setMessage("Are you sure you want to close this card?")
+                    .setTitle("Close card")
                     .setCancelable(false)
                     .setPositiveButton("Yes") { _, _ ->
                         // Delete card from RecyclerView

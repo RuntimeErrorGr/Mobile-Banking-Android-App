@@ -20,10 +20,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import eim.project.mobile_banking_android_app.databinding.DialogAddSavingsAccountBinding
 import eim.project.mobile_banking_android_app.databinding.FragmentSavingsAccountBinding
 import eim.project.mobile_banking_android_app.home.DatePickerFragment
@@ -123,16 +120,18 @@ class SavingsAccountFragment : Fragment() {
                     val depositCheckbox = dialogView.depositCheckbox.isChecked
 
                     // Additional data
-                    val iban = "${accountCurrencyText.take(2)}${(1..14).map { (0..9).random() }.joinToString("")}".padEnd(16, '0')
                     val objectRate = if (depositCheckbox) depositRateText.toDouble() else 0.0
                     val objectAmount = if (depositCheckbox) depositAmountText.toDouble() else 0.0
                     val objectDate = if (depositCheckbox) depositDateText else ""
+                    val objectCurrency = if (accountCurrencyText != "") accountCurrencyText else "RON"
+                    val objectName = if (accountNameText != "") accountNameText else "New Account"
+                    val iban = "${objectCurrency.take(2)}${(1..14).map { (0..9).random() }.joinToString("")}".padEnd(16, '0')
 
                     // Create account
                     val account = SavingsAccount(
                         cardNumber = cardNumber,
-                        currency = accountCurrencyText,
-                        name = accountNameText,
+                        currency = objectCurrency,
+                        name = objectName,
                         iban = iban,
                         interest_rate = objectRate,
                         sold = objectAmount,
@@ -263,9 +262,86 @@ class SavingsAccountFragment : Fragment() {
                 adapter.notifyItemChanged(position)
                 return
             }
+            val builder = context?.let { AlertDialog.Builder(it) }
+            builder!!.setMessage("Are you sure you want to close this account?")
+                .setTitle("Close account")
+                .setCancelable(false)
+                .setPositiveButton("Yes") { _, _ ->
             val query = cardsRef.orderByChild("number").equalTo(cardNumber)
+            query.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        val mainAccountSnapshot =
+                            dataSnapshot.children.firstOrNull()?.child("savingsAccounts")
+                                ?.child("0")
+                        val mainAccountSold =
+                            mainAccountSnapshot?.child("sold")?.getValue(Double::class.java) ?: 0.0
 
+                        var accountNode: DatabaseReference? = null
+
+                        // Find the node that matches the account's IBAN
+                        for (childSnapshot in dataSnapshot.children) {
+                            val savingsAccountsSnapshot = childSnapshot.child("savingsAccounts")
+                            for (accountSnapshot in savingsAccountsSnapshot.children) {
+                                val iban =
+                                    accountSnapshot.child("iban").getValue(String::class.java)
+                                if (iban == account.iban) {
+                                    accountNode = accountSnapshot.ref
+                                    break
+                                }
+                            }
+                            if (accountNode != null) {
+                                break
+                            }
+                        }
+
+                        if (accountNode != null) {
+                            val newMainAccountSoldValue = mainAccountSold + account.sold
+                            accountNode.removeValue().addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    mainAccountSnapshot?.child("sold")?.ref?.setValue(
+                                        newMainAccountSoldValue
+                                    )
+                                        ?.addOnCompleteListener { mainAccountTask ->
+                                            if (mainAccountTask.isSuccessful) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Savings account deleted successfully",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Failed to update main account's sold value",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Failed to delete savings account",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        } else {
+                            Toast.makeText(context, "Account not found", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                    Log.e(TAG, "loadAccounts:onCancelled", databaseError.toException())
+                }
+            })
+                }
+                .setNegativeButton("No") { dialog, _ ->
+                    dialog.dismiss()
+                    adapter.notifyItemChanged(position)
+                }
+            val alert = builder.create()
+            alert.show()
         }
-
     })
 }
