@@ -13,6 +13,7 @@ import com.google.firebase.database.ValueEventListener
 import eim.project.mobile_banking_android_app.databinding.ActivityCardDetailsBinding
 import eim.project.mobile_banking_android_app.databinding.DialogChangePinBinding
 import eim.project.mobile_banking_android_app.home.Card
+import eim.project.mobile_banking_android_app.transactions.accounts.SavingsAccountFragment
 import java.util.*
 
 class CardDetailsActivity : AppCompatActivity() {
@@ -28,6 +29,7 @@ class CardDetailsActivity : AppCompatActivity() {
         val expiryDate = extras.getString("expiryDate", "")
         val cardHolderName = extras.getString("name", "")
         val cardCvv = extras.getString("cvv", "")
+
 
         // Access the views inside the CardView and set their text
         binding.creditCard.cardNumber.text = cardNumber.chunked(4).joinToString(" ")
@@ -58,6 +60,14 @@ class CardDetailsActivity : AppCompatActivity() {
             true
         }
 
+        val bundle = Bundle().apply {
+            putString("currentCardNumber", cardNumber)
+        }
+        val savingsAccountFragment = SavingsAccountFragment()
+        savingsAccountFragment.arguments = bundle
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.savings_accounts_fragment, savingsAccountFragment)
+            .commit()
 
     }
 

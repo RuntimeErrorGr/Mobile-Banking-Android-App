@@ -1,0 +1,110 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:animateLayoutChanges="true"
+    android:elevation="35dp"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/title_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Open a new savings account"
+        android:textStyle="bold"
+        android:textColor="@color/babyblue"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
+
+    <EditText
+        android:id="@+id/accountName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLength="20"
+        android:hint="Account Name"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/accountCurrency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textCapCharacters"
+            android:hint="Account Currency"
+            android:maxLength="3" />
+
+        <CheckBox
+            android:id="@+id/depositCheckbox"
+            android:layout_width="188dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:layout_marginStart="16dp"
+            android:text="Open Deposit"/>
+
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/depositAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="numberDecimal"
+        android:hint="Amount"
+        android:visibility="gone"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/depositDateLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:text="Term Deposit Due Date:"
+            android:visibility="gone"
+            android:layout_weight="1"/>
+
+        <TextView
+            android:id="@+id/depositDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="01/11/2023"
+            android:textStyle="italic"
+            android:visibility="gone"
+            android:layout_weight="1"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/depositRateLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Term Deposit Interest Rate:"
+            android:layout_weight="1"
+            android:visibility="gone"
+            android:layout_marginStart="10dp"/>
+
+        <TextView
+            android:id="@+id/depositRate"
+            android:layout_width="95dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:textStyle="italic"
+            android:layout_marginLeft="0dp"
+            android:layout_weight="1"
+            android:text="0.05"
+            android:visibility="gone"
+            tools:ignore="RtlHardcoded" />
+
+    </LinearLayout>
+
+</LinearLayout>

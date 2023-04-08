@@ -1,6 +1,6 @@
-package eim.project.mobile_banking_android_app.payments
+package eim.project.mobile_banking_android_app.transactions.transfers
 
-data class Payment(
+data class Transfer(
     val IBANdest: String,
     val IBANscr: String,
     val amount: Double,

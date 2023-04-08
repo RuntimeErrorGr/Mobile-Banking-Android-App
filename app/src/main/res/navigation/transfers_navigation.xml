@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/transfers_navigation"
+    app:startDestination="@+id/fragment_transfers">
+
+    <fragment
+        android:id="@+id/fragment_transfers"
+        android:name="eim.project.mobile_banking_android_app.transactions.transfers.TransferFragment"
+        android:label="Transfers"
+        tools:layout="@layout/fragment_transfers" >
+    </fragment>
+</navigation>

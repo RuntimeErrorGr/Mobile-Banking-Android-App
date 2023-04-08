@@ -24,6 +24,7 @@ import eim.project.mobile_banking_android_app.CardDetailsActivity
 import eim.project.mobile_banking_android_app.MainActivity
 import eim.project.mobile_banking_android_app.databinding.DialogAddCardBinding
 import eim.project.mobile_banking_android_app.databinding.FragmentHomeBinding
+import eim.project.mobile_banking_android_app.transactions.accounts.SavingsAccount
 import java.util.*
 
 class HomeFragment : Fragment() {
@@ -81,9 +82,10 @@ class HomeFragment : Fragment() {
                     val nameOnCard = dialogView.nameEditText.text.toString()
                     val expirationDate = dialogView.dateEditText.text.toString()
                     val cvv = dialogView.cvvEditText.text.toString()
-
                     if (validateCardDetalisInput(cardNumber, nameOnCard, expirationDate, cvv)) {
                         val card = Card(cardNumber, nameOnCard, expirationDate, cvv)
+                        val iban = "RO${Random().nextInt(999999999)}"
+                        card.savingsAccounts.add(SavingsAccount(iban))
                         addCardToDatabase(card, dialog)
                     }
                 }

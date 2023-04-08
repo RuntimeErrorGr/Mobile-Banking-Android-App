@@ -15,7 +15,7 @@
         android:id="@+id/navigation_payments"
         android:name="eim.project.mobile_banking_android_app.payments.PaymentsFragment"
         android:label="@string/title_payments"
-        tools:layout="@layout/fragment_dashboard" />
+        tools:layout="@layout/fragment_payments" />
 
     <fragment
         android:id="@+id/navigation_transactions"

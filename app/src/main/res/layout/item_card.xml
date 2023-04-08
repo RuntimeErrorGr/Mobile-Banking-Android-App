@@ -19,8 +19,15 @@
 
         <ProgressBar
             android:id="@+id/progress_bar"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_width="130dp"
+            android:layout_height="88dp"
+            android:layout_alignTop="@+id/card_number"
+            android:layout_alignEnd="@+id/card_number"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="-46dp"
+            android:layout_marginEnd="135dp"
+            android:layout_marginBottom="65dp" />
 
         <ImageView
             android:id="@+id/card_chip"
