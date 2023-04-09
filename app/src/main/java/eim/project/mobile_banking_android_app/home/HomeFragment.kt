@@ -91,7 +91,7 @@ class HomeFragment : Fragment() {
                             isMain = true,
                             isDeposit = false,
                             liquidation_date = "",
-                            cardNumber = card.number
+                            cardNumber = card.number,
                         ))
                         addCardToDatabase(card, dialog)
                     }

@@ -1,7 +1,6 @@
 package eim.project.mobile_banking_android_app.home
 
 import eim.project.mobile_banking_android_app.transactions.accounts.SavingsAccount
-import eim.project.mobile_banking_android_app.transactions.transfers.Transfer
 
 data class Card(
     val number: String,
@@ -10,10 +9,9 @@ data class Card(
     val cvv: String,
     var pin: String = "1234",
     var savingsAccounts: ArrayList<SavingsAccount> = ArrayList(),
-    var transfers: ArrayList<Transfer> = ArrayList(),
     var masked: Boolean = true
 ) {
-    constructor() : this("", "", "", "", "1234", ArrayList(), ArrayList(), true)
+    constructor() : this("", "", "", "", "1234", ArrayList(), true)
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false

@@ -94,7 +94,7 @@ class SavingsAccountFragment : Fragment() {
                     val nowTimestamp = Date().time
                     val daysDifference = TimeUnit.MILLISECONDS.toDays(depositTimestamp - nowTimestamp)
                     val rateMultiplier = BigDecimal((ln((daysDifference / 30.0) + 1) + 1)).setScale(3, RoundingMode.HALF_UP).toDouble()
-                    return (0.9 * rateMultiplier).toString().take(6)
+                    return (1.4 * rateMultiplier).toString().take(6)
                 }
                 @SuppressLint("SetTextI18n")
                 override fun afterTextChanged(s: Editable?) {
@@ -215,7 +215,8 @@ class SavingsAccountFragment : Fragment() {
                             accountSnapshot.getValue(SavingsAccount::class.java)?.let { savingsAccountList.add(it) }
                         }
                     }
-                    adapter = SavingsAccountAdapter(requireContext(), savingsAccountList)
+                    adapter = context?.let { SavingsAccountAdapter(it, savingsAccountList) }!!
+
                     binding.recicleView.adapter = adapter
                     itemTouchHelper.attachToRecyclerView(binding.recicleView)
                 }
@@ -240,11 +241,6 @@ class SavingsAccountFragment : Fragment() {
         }
         val formattedDate = SimpleDateFormat("dd/MM/yyyy", Locale.US).format(selectedDate.time)
         dialogView.depositDate.text = formattedDate
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 
     val itemTouchHelper = ItemTouchHelper(object :

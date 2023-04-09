@@ -24,6 +24,10 @@ class SavingsAccountAdapter : RecyclerView.Adapter<SavingsAccountAdapter.Savings
         val account_currency = binding.currencyTextview
         val account_type = binding.typeTextview
         val account_name = binding.titleTextview
+        val account_rate = binding.rateTextView
+        val accout_date = binding.dateTextView
+        val account_date_label = binding.dateLabelTextView
+        val account_rate_label = binding.rateLabelTextView
 
     }
 
@@ -38,11 +42,22 @@ class SavingsAccountAdapter : RecyclerView.Adapter<SavingsAccountAdapter.Savings
 
     override fun onBindViewHolder(holder: SavingsAccountHolder, position: Int) {
         val account = accounts[position]
-        holder.account_name.text = account.name
         holder.account_ballance.text = "$"+account.sold.toString()
         holder.account_iban.text = account.iban
         holder.account_currency.text = account.currency
         holder.account_type.text = if (account.isDeposit) "Deposit" else if (account.isMain) "" else "Savings"
+        if (account.isDeposit) {
+            if (account.name == "New Account") {
+                account.name = "New Deposit"
+            }
+            holder.account_rate.text = account.interest_rate.toString() + "%"
+            holder.accout_date.text = account.liquidation_date
+            holder.accout_date.visibility = View.VISIBLE
+            holder.account_rate.visibility = View.VISIBLE
+            holder.account_date_label.visibility = View.VISIBLE
+            holder.account_rate_label.visibility = View.VISIBLE
+        }
+        holder.account_name.text = account.name
     }
 
 }

@@ -14,6 +14,7 @@ import eim.project.mobile_banking_android_app.databinding.ActivityCardDetailsBin
 import eim.project.mobile_banking_android_app.databinding.DialogChangePinBinding
 import eim.project.mobile_banking_android_app.home.Card
 import eim.project.mobile_banking_android_app.transactions.accounts.SavingsAccountFragment
+import eim.project.mobile_banking_android_app.transactions.transfers.TransferFragment
 import java.util.*
 
 class CardDetailsActivity : AppCompatActivity() {
@@ -67,6 +68,11 @@ class CardDetailsActivity : AppCompatActivity() {
         savingsAccountFragment.arguments = bundle
         supportFragmentManager.beginTransaction()
             .replace(R.id.savings_accounts_fragment, savingsAccountFragment)
+            .commit()
+        val transfersFragment = TransferFragment()
+        transfersFragment.arguments = bundle
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.transfers_fragment, transfersFragment)
             .commit()
 
     }

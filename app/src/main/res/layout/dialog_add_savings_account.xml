@@ -88,7 +88,7 @@
             android:id="@+id/depositRateLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Term Deposit Interest Rate:"
+            android:text="Term Deposit Interest Rate(%):"
             android:layout_weight="1"
             android:visibility="gone"
             android:layout_marginStart="10dp"/>

@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/credit_card"
     android:layout_width="match_parent"
-    android:layout_height="120dp"
+    android:layout_height="wrap_content"
     android:layout_margin="8dp"
     android:background="#00000000"
     app:cardCornerRadius="16dp"
@@ -12,7 +12,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="90dp"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         app:cardCornerRadius="16dp"
         app:cardElevation="14dp"
@@ -114,6 +114,56 @@
                 android:text="Main"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textStyle="bold" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/rateLabelTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="0dp"
+                android:textStyle="bold"
+                android:text="Rate: "
+                android:visibility="gone"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <TextView
+                android:id="@+id/rateTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="@dimen/activity_horizontal_margin"
+                android:text="0.5%"
+                android:visibility="gone"
+                android:textStyle="italic"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/dateLabelTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="0dp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                android:text="Due date: "
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <TextView
+                android:id="@+id/dateTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="@dimen/activity_horizontal_margin"
+                android:text="01/01/2020"
+                android:visibility="gone"
+                android:textStyle="italic"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
         </LinearLayout>
 
     </LinearLayout>

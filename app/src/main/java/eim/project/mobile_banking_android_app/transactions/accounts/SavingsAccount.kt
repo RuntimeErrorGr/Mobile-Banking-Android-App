@@ -1,5 +1,7 @@
 package eim.project.mobile_banking_android_app.transactions.accounts
 
+import eim.project.mobile_banking_android_app.transactions.transfers.Transfer
+
 data class SavingsAccount(
     var cardNumber: String? = null,
     var currency: String = "RON",
@@ -10,9 +12,10 @@ data class SavingsAccount(
     var name: String = "New Account",
     var liquidation_date: String? = null,
     var isExpanded : Boolean = false,
-    var sold: Double = 0.0
+    var sold: Double = 0.0,
+    var transfers: ArrayList<Transfer> = ArrayList()
 ){
-    constructor() : this("New Account", "RON", false, "", 0.0, false, "New Account", "", false, 0.0)
+    constructor() : this("", "RON", false, "", 0.0, false, "New Account", null, false, 0.0, ArrayList())
 
     constructor(iban:String): this(iban=iban, isMain=true)
 
