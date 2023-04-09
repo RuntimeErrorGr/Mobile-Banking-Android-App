@@ -6,6 +6,16 @@
     android:layout_height="match_parent"
     tools:context=".home.HomeFragment">
 
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        tools:layout_editor_absoluteX="165dp"
+        tools:layout_editor_absoluteY="80dp">
+
+    </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recicleView"
         android:layout_width="match_parent"
@@ -24,7 +34,7 @@
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        tools:layout_editor_absoluteY="66dp">
 
 
         <Button

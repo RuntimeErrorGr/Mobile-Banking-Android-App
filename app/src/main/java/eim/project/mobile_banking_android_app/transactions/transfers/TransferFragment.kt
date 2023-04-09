@@ -103,16 +103,16 @@ class TransferFragment : Fragment() {
                                         }
                                         adapter = TransferAdapter(requireContext(), filteredList)
                                         binding.recicleView.adapter = adapter
-                                        if (filteredList.isEmpty()) {
-                                            binding.recicleView.visibility = View.GONE
-                                            binding.noTransfersFound.visibility = View.VISIBLE
-                                        } else {
-                                            binding.recicleView.visibility = View.VISIBLE
-                                            binding.noTransfersFound.visibility = View.GONE
-                                        }
                                         return true
                                     }
                                 })
+                                if (filteredList.isEmpty()) {
+                                    binding.recicleView.visibility = View.GONE
+                                    binding.noTransfersFound.visibility = View.VISIBLE
+                                } else {
+                                    binding.recicleView.visibility = View.VISIBLE
+                                    binding.noTransfersFound.visibility = View.GONE
+                                }
                             }
                             override fun onCancelled(error: DatabaseError) {
                                 Toast.makeText(context, "Error loading transfers", Toast.LENGTH_SHORT).show()

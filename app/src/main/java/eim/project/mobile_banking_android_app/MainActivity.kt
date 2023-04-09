@@ -1,6 +1,7 @@
 package eim.project.mobile_banking_android_app
 
 import android.app.ProgressDialog
+import android.content.ContentValues
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -12,6 +13,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 import eim.project.mobile_banking_android_app.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -139,8 +145,24 @@ class MainActivity : AppCompatActivity() {
                 val phone = firebaseUser!!.phoneNumber
                 Toast.makeText(this, "Logged in as $phone", Toast.LENGTH_SHORT).show()
                 // user is logged in
-                startActivity(Intent(this, DashboardActivity::class.java))
-                finish()
+                val phoneNumberRef = Firebase.database.reference.
+                child("users").
+                child(firebaseUser.uid).
+                child("phoneNumber")
+                phoneNumberRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                        if (!dataSnapshot.exists()) {
+                            phoneNumberRef.setValue(phone)
+                            startActivity(Intent(this@MainActivity, ChangeNameActivity::class.java))
+                        } else {
+                            startActivity(Intent(this@MainActivity, DashboardActivity::class.java))
+                        }
+                        this@MainActivity.finish()
+                    }
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.d(ContentValues.TAG, "onCancelled: $error")
+                    }
+                })
             }
             .addOnFailureListener { e ->
                 progressDialog.dismiss()

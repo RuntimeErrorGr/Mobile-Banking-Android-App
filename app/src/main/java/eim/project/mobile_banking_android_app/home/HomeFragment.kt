@@ -99,7 +99,6 @@ class HomeFragment : Fragment() {
             }
             dialog.show()
         }
-
         loadCardsList()
         return root
     }
@@ -117,6 +116,8 @@ class HomeFragment : Fragment() {
             activity?.finish()
         } else {
             // TODO: user is logged in, get user info
+
+
         }
     }
 
