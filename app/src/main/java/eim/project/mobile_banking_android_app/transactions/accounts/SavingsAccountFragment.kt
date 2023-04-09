@@ -44,6 +44,7 @@ class SavingsAccountFragment : Fragment() {
         arguments?.let {
             cardNumber = it.getString("currentCardNumber")
         }
+
     }
 
     override fun onResume() {
@@ -132,7 +133,11 @@ class SavingsAccountFragment : Fragment() {
                     val objectDate = if (depositCheckbox) depositDateText else ""
                     val objectCurrency = if (accountCurrencyText != "") accountCurrencyText else "RON"
                     val objectName = if (accountNameText != "") accountNameText else "New Account"
-                    val iban = "${objectCurrency.take(2)}${(1..14).map { (0..9).random() }.joinToString("")}".padEnd(16, '0')
+                    val iban = "${objectCurrency.
+                        take(2)}${(1..14).
+                        map { (0..9).random() }.
+                        joinToString("")}".
+                        padEnd(16, '0')
 
                     // Create account
                     val account = SavingsAccount(
@@ -161,16 +166,31 @@ class SavingsAccountFragment : Fragment() {
             FirebaseDatabase.getInstance().reference.child("users").child(it).child("cards")
         }
 
-        cardsRef?.orderByChild("number")?.equalTo(cardNumber)?.addListenerForSingleValueEvent(object : ValueEventListener {
+        cardsRef?.orderByChild("number")?.equalTo(cardNumber)?.
+        addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val mainAccountSnapshot = dataSnapshot.children.firstOrNull()?.child("savingsAccounts")?.child("0")
-                val mainAccountSold = mainAccountSnapshot?.child("sold")?.getValue(Double::class.java) ?: 0.0
-
+                val mainAccountSnapshot = dataSnapshot.children.
+                    firstOrNull()?.
+                    child("savingsAccounts")?.
+                    child("0")
+                val mainAccountSold = mainAccountSnapshot?.
+                    child("sold")?.
+                    getValue(Double::class.java) ?:
+                    0.0
                 val savingsAccountsRef = mainAccountSnapshot?.ref?.parent
-                val accountNumber = dataSnapshot.children.firstOrNull()?.child("savingsAccounts")?.children?.last()?.key?.toInt()?.plus(1).toString()
+                val accountNumber = dataSnapshot.children.
+                    firstOrNull()?.
+                    child("savingsAccounts")?.
+                    children?.
+                    last()?.
+                    key?.
+                    toInt()?.
+                    plus(1).
+                    toString()
 
                 if (account.isDeposit && account.sold > mainAccountSold) {
-                    Toast.makeText(context, "Deposit account's sold value is greater than the main account's sold value", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Deposit account's sold value is greater than the main account's sold value",
+                        Toast.LENGTH_SHORT).show()
                     return
                 }
 
@@ -180,20 +200,24 @@ class SavingsAccountFragment : Fragment() {
                         mainAccountSnapshot.child("sold").ref.setValue(newMainAccountSoldValue)
                             .addOnCompleteListener { mainAccountTask ->
                                 if (mainAccountTask.isSuccessful) {
-                                    Toast.makeText(context, "Savings account added successfully", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Savings account added successfully",
+                                        Toast.LENGTH_SHORT).show()
                                     dialog.dismiss()
                                 } else {
-                                    Toast.makeText(context, "Failed to update main account's sold value", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Failed to update main account's sold value",
+                                        Toast.LENGTH_SHORT).show()
                                 }
                             }
                     } else {
-                        Toast.makeText(context, "Failed to add savings account", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Failed to add savings account",
+                            Toast.LENGTH_SHORT).show()
                     }
                 }
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
-                Toast.makeText(context, "Failed to retrieve card data", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Failed to retrieve card data",
+                    Toast.LENGTH_SHORT).show()
             }
         })
     }

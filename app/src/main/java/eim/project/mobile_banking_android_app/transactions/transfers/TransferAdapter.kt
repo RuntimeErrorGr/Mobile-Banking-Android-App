@@ -27,7 +27,6 @@ class TransferAdapter : RecyclerView.Adapter<TransferAdapter.TransferHolder> {
         val transfer_currency = binding.currencyTextview
         val transfer_iban_dest = binding.ibanDestTextview
         val transfer_iban_src = binding.ibanSrcTextview
-        val transfer_type = binding.typeTextview
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransferHolder {
@@ -55,6 +54,6 @@ class TransferAdapter : RecyclerView.Adapter<TransferAdapter.TransferHolder> {
         }
         holder.transfer_iban_dest.text = transfer.destIban
         holder.transfer_iban_src.text = transfer.srcIban
-        holder.transfer_type.text = transfer.type
     }
+
 }

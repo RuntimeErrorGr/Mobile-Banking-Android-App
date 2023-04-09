@@ -7,7 +7,9 @@ data class Transfer(
     val currency: String = "RON",
     val description: String? = "New transfer",
     val date: String = "01/01/2023",
-    val type: String = "income"
+    val type: String = "income",
+    val srcName: String = "",
+    val destName: String = ""
 )
 {
     constructor() : this("", "", 0.0, "RON", "New transfer", "01/01/2022", "income")

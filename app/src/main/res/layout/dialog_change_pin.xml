@@ -3,6 +3,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
+    android:background="@color/white"
+    android:backgroundTint="@color/white"
+    android:elevation="35dp"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -10,37 +14,43 @@
         android:id="@+id/title_textview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Change PIN"
+        android:text="Change card PIN code"
         android:textColor="@color/babyblue"
         android:textSize="20sp"
         android:textStyle="bold"/>
 
     <EditText
         android:id="@+id/current_pin_edittext"
-        android:layout_width="match_parent"
+        android:layout_width="136dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:hint="Current PIN"
         android:inputType="numberPassword"
         android:maxLength="4"
-        android:textSize="18sp"
-        android:layout_marginTop="16dp"/>
-
-    <EditText
-        android:id="@+id/new_pin_edittext"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="New PIN"
-        android:inputType="numberPassword"
-        android:maxLength="4"
-        android:textSize="18sp"
-        android:layout_marginTop="16dp"/>
+        android:textSize="18sp" />
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="16dp">
+        android:layout_width="370dp"
+        android:layout_height="72dp"
+        android:orientation="horizontal" >
 
+        <EditText
+            android:id="@+id/new_pin_edittext"
+            android:layout_width="136dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="New PIN"
+            android:inputType="numberPassword"
+            android:maxLength="4"
+            android:textSize="18sp" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="16dp"
+            android:text="Accept terms and conditions" />
     </LinearLayout>
 
 </LinearLayout>
+
