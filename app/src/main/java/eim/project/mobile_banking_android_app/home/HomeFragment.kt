@@ -87,7 +87,11 @@ class HomeFragment : Fragment() {
                     val cvv = dialogView.cvvEditText.text.toString()
                     if (validateCardDetalisInput(cardNumber, nameOnCard, expirationDate, cvv)) {
                         val card = Card(cardNumber, nameOnCard, expirationDate, cvv)
-                        val iban = "RO${(1..14).map { (0..9).random() }.joinToString("")}".padEnd(16, '0')
+                        val iban = "RO${(1..14).
+                            map { (0..9).
+                            random() }.
+                            joinToString("")}".
+                            padEnd(16, '0')
                         card.savingsAccounts.add(SavingsAccount(
                             name="Main account",
                             iban=iban,
@@ -189,10 +193,6 @@ class HomeFragment : Fragment() {
             Toast.makeText(requireContext(), "Please fill in cvv", Toast.LENGTH_SHORT).show()
             return false
         }
-//        if (cardNumber.isEmpty() || nameOnCard.isEmpty() || expirationDate.isEmpty() || cvv.isEmpty()) {
-//            Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
-//            return false
-//        }
 
         // Validate the card number has 16 digits
         val cardNumberRegex = Regex("\\d{16}")

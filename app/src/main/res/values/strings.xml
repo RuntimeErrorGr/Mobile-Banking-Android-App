@@ -10,4 +10,5 @@
     <string name="please_enter_the_verification_code">Please enter verification code</string>
     <string name="verification_code">Verification code</string>
     <string name="resend_otp">Resend OTP</string>
+    <string name="select_card_number">Select card number</string>
 </resources>
