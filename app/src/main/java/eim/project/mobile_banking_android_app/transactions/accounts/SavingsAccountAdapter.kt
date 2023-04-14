@@ -60,4 +60,5 @@ class SavingsAccountAdapter : RecyclerView.Adapter<SavingsAccountAdapter.Savings
         holder.account_name.text = account.name
     }
 
+
 }

@@ -1,5 +1,6 @@
 package eim.project.mobile_banking_android_app.home
 
+import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
 import android.icu.text.SimpleDateFormat
@@ -22,6 +23,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import eim.project.mobile_banking_android_app.CardDetailsActivity
 import eim.project.mobile_banking_android_app.MainActivity
+import eim.project.mobile_banking_android_app.R
 import eim.project.mobile_banking_android_app.databinding.DialogAddCardBinding
 import eim.project.mobile_banking_android_app.databinding.FragmentHomeBinding
 import eim.project.mobile_banking_android_app.transactions.accounts.SavingsAccount
@@ -75,6 +77,7 @@ class HomeFragment : Fragment() {
                 dialog.dismiss()
             }
             val dialog = builder.create()
+            dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
             dialog.setOnShowListener {
                 val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                 positiveButton.setOnClickListener {
@@ -99,6 +102,16 @@ class HomeFragment : Fragment() {
             }
             dialog.show()
         }
+
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        FirebaseDatabase.getInstance().reference.child("users").
+            child(currentUser!!.uid).
+            child("name").
+            get().
+            addOnSuccessListener { dataSnapshot ->
+                val name = dataSnapshot.getValue(String::class.java)
+                binding.nameText.text = "Hello, ${name}"
+            }
         loadCardsList()
         return root
     }
@@ -112,7 +125,9 @@ class HomeFragment : Fragment() {
         val firebaseUser = firebaseAuth.currentUser
         if (firebaseUser == null) {
             // user not logged in, go to main activity
-            activity?.startActivity(Intent(activity, MainActivity::class.java))
+            val intent = Intent(activity, MainActivity::class.java)
+            val options = ActivityOptions.makeCustomAnimation(activity, R.anim.slide_in_right, R.anim.slide_out_left)
+            startActivity(intent, options.toBundle())
             activity?.finish()
         } else {
             // TODO: user is logged in, get user info
@@ -327,7 +342,8 @@ class HomeFragment : Fragment() {
                     putString("cvv", card.cvv)
                 }
                 intent.putExtras(bundle)
-                context?.startActivity(intent)
+                val options = ActivityOptions.makeCustomAnimation(activity, R.anim.slide_in_right, R.anim.slide_out_left)
+                context?.startActivity(intent, options.toBundle())
             }
         }
     })

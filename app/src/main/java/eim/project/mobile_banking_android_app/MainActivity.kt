@@ -101,6 +101,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun startActivity(intent: Intent?) {
+        super.startActivity(intent)
+
+        // Set the transition animation
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+    }
+
     private fun startPhoneNumberVerification(phoneNumber: String) {
         progressDialog.setMessage("Verifying phone number...")
         progressDialog.show()

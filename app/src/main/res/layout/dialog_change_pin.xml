@@ -45,11 +45,12 @@
             android:textSize="18sp" />
 
         <CheckBox
-            android:layout_width="wrap_content"
+            android:layout_width="186dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
             android:layout_marginTop="16dp"
-            android:text="Accept terms and conditions" />
+            android:gravity="center"
+            android:text="Accept terms and\nconditions" />
     </LinearLayout>
 
 </LinearLayout>

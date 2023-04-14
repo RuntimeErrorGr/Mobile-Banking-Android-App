@@ -9,17 +9,66 @@
         android:id="@+id/navigation_home"
         android:name="eim.project.mobile_banking_android_app.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+    <action
+        android:id="@+id/home_to_transactions"
+        app:destination="@id/navigation_transactions"
+        app:enterAnim="@anim/slide_in_right"
+        app:exitAnim="@anim/slide_out_left"
+        app:popEnterAnim="@anim/slide_in_left"
+        app:popExitAnim="@anim/slide_out_right" />
+
+    <action
+        android:id="@+id/home_to_payments"
+        app:destination="@id/navigation_payments"
+        app:enterAnim="@anim/slide_in_right"
+        app:exitAnim="@anim/slide_out_left"
+        app:popEnterAnim="@anim/slide_in_left"
+        app:popExitAnim="@anim/slide_out_right" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_payments"
         android:name="eim.project.mobile_banking_android_app.payments.PaymentsFragment"
         android:label="@string/title_payments"
-        tools:layout="@layout/fragment_payments" />
+        tools:layout="@layout/fragment_payments">
+    <action
+        android:id="@+id/payments_to_home"
+        app:destination="@id/navigation_home"
+        app:enterAnim="@anim/slide_in_left"
+        app:exitAnim="@anim/slide_out_right"
+        app:popEnterAnim="@anim/slide_in_right"
+        app:popExitAnim="@anim/slide_out_left" />
+
+    <action
+        android:id="@+id/payments_to_transactions"
+        app:destination="@id/navigation_transactions"
+        app:enterAnim="@anim/slide_in_right"
+        app:exitAnim="@anim/slide_out_left"
+        app:popEnterAnim="@anim/slide_in_left"
+        app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_transactions"
         android:name="eim.project.mobile_banking_android_app.transactions.TransactionsFragment"
         android:label="@string/title_transactions"
-        tools:layout="@layout/fragment_transactions" />
+        tools:layout="@layout/fragment_transactions">
+    <action
+        android:id="@+id/transactions_to_home"
+        app:destination="@id/navigation_home"
+        app:enterAnim="@anim/slide_in_left"
+        app:exitAnim="@anim/slide_out_right"
+        app:popEnterAnim="@anim/slide_in_right"
+        app:popExitAnim="@anim/slide_out_left" />
+
+    <action
+        android:id="@+id/transactions_to_payments"
+        app:destination="@id/navigation_payments"
+        app:enterAnim="@anim/slide_in_right"
+        app:exitAnim="@anim/slide_out_left"
+        app:popEnterAnim="@anim/slide_in_left"
+        app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
 </navigation>

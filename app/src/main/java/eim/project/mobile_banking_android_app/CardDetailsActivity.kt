@@ -31,7 +31,6 @@ class CardDetailsActivity : AppCompatActivity() {
         val cardHolderName = extras.getString("name", "")
         val cardCvv = extras.getString("cvv", "")
 
-
         // Access the views inside the CardView and set their text
         binding.creditCard.cardNumber.text = cardNumber.chunked(4).joinToString(" ")
         binding.creditCard.expiryDate.text = expiryDate
@@ -49,6 +48,7 @@ class CardDetailsActivity : AppCompatActivity() {
                 dialog.dismiss()
             }
             val dialog = builder.create()
+            dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
             dialog.setOnShowListener {
                 val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                 positiveButton.setOnClickListener {
@@ -115,5 +115,11 @@ class CardDetailsActivity : AppCompatActivity() {
         })
     }
 
+    // In your Dashboard activity
+    override fun onBackPressed() {
+        super.onBackPressed()
+        // Set the transition animation
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+    }
 
 }

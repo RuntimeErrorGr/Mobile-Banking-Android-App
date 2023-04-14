@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import eim.project.mobile_banking_android_app.R
 import eim.project.mobile_banking_android_app.databinding.DialogAddSavingsAccountBinding
 import eim.project.mobile_banking_android_app.databinding.FragmentSavingsAccountBinding
 import eim.project.mobile_banking_android_app.home.DatePickerFragment
@@ -116,6 +117,7 @@ class SavingsAccountFragment : Fragment() {
                 dialog.dismiss()
             }
             val dialog = builder.create()
+            dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
             dialog.setOnShowListener {
                 val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                 positiveButton.setOnClickListener {

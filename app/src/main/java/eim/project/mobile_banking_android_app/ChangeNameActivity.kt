@@ -31,7 +31,7 @@ class ChangeNameActivity : AppCompatActivity() {
             currentUserRef.child("name").setValue(name)
                 .addOnSuccessListener {
                     Toast.makeText(this, "Name updated successfully", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, DashboardActivity::class.java))
+                    startActivity(Intent(this@ChangeNameActivity, DashboardActivity::class.java))
                     this.finish()
                 }
                 .addOnFailureListener {

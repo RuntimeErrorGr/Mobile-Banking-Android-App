@@ -32,6 +32,7 @@ class PaymentsFragment : Fragment() {
         paymentsViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
         }
+
         return root
     }
 
