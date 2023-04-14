@@ -3,8 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:background="@color/babyblue"
-    android:alpha="0.4"
+    android:background="#83BBF3"
     android:layout_height="match_parent">
 
     <TextView
@@ -14,6 +13,7 @@
         android:text="Hello!\n\n It looks like you haven't set up your name yet."
         android:textColor="@android:color/black"
         android:textSize="24sp"
+        android:alpha="0.4"
         android:textStyle="bold"
         android:gravity="center"
         app:layout_constraintTop_toTopOf="parent"
@@ -30,6 +30,7 @@
         android:text="Please enter your name below and press save to continue:"
         android:textColor="@android:color/black"
         android:gravity="center"
+        android:alpha="0.4"
         android:textSize="20sp"
         app:layout_constraintTop_toBottomOf="@id/titleTextView"
         app:layout_constraintStart_toStartOf="parent"
@@ -62,6 +63,7 @@
         android:textColor="@android:color/black"
         android:textStyle="italic"
         android:textSize="16sp"
+        android:alpha="0.4"
         app:layout_constraintTop_toBottomOf="@id/nameEditText"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
