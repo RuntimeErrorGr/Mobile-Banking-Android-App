@@ -10,7 +10,7 @@
         android:id="@+id/text_payments"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start a payment"
+        android:text="Make a payment"
         android:textAlignment="center"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -25,20 +25,134 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="11dp"
         android:paddingStart="10dp"
-        android:text="Select source card:"
+        android:text="Select the card from wich you wish to transfer:"
         android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_payments" />
 
     <Spinner
         android:id="@+id/card_number_spinner"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:focusable="true"
         android:focusableInTouchMode="true"
-        android:layout_height="wrap_content"
         android:prompt="@string/select_card_number"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/card_number_label" />
+
+    <TextView
+        android:id="@+id/account_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="11dp"
+        android:paddingStart="10dp"
+        android:text="Select account from which you wish to transfer:"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/card_number_spinner" />
+
+    <Spinner
+        android:id="@+id/account_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:prompt="@string/select_account_name"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/account_label" />
+
+    <TextView
+        android:id="@+id/available_money_question"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="11dp"
+        android:paddingStart="10dp"
+        android:text="How much do you want to transfer?"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/account_spinner" />
+
+    <LinearLayout
+        android:id="@+id/amount_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="11dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/available_money_question">
+
+        <EditText
+            android:id="@+id/amount_input"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="6"
+            android:hint="0.00"
+            android:inputType="numberDecimal"
+            android:padding="8dp"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/max_available_money"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="-1"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/currency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="RON"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/destination_user_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="11dp"
+        android:paddingStart="10dp"
+        android:text="Where do you want to transfer money?"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/amount_layout"
+        tools:layout_editor_absoluteX="0dp" />
+
+    <Spinner
+        android:id="@+id/destination_user_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:prompt="@string/select_account_name"
+        app:layout_constraintTop_toBottomOf="@+id/destination_user_label" />
+
+    <TextView
+        android:id="@+id/destination_account_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="11dp"
+        android:paddingStart="10dp"
+        android:text="Which account?"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/destination_user_spinner"
+        tools:layout_editor_absoluteX="0dp" />
+
+    <Spinner
+        android:id="@+id/destination_account_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:prompt="@string/select_account_name"
+        app:layout_constraintTop_toBottomOf="@+id/destination_account_label" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
