@@ -24,10 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import eim.project.mobile_banking_android_app.databinding.FragmentPaymentsBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -54,6 +51,9 @@ class PaymentsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         selectSourceCard()
         selectDestinationUser()
+        binding.paymentButton.setOnClickListener {
+            makePayment()
+        }
     }
 
     private fun selectSourceCard() {
@@ -67,14 +67,11 @@ class PaymentsFragment : Fragment() {
             adapter.insert("No card selected", 0)
             cardNumberSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                    // Get the selected card number
                     val selectedCardNumber = parent.getItemAtPosition(position) as String
                     selectSourceAccount(selectedCardNumber.replace(" ", ""))
                 }
 
-                override fun onNothingSelected(parent: AdapterView<*>) {
-                    // Do nothing
-                }
+                override fun onNothingSelected(parent: AdapterView<*>) {}
             }
         }
     }
@@ -298,6 +295,7 @@ class PaymentsFragment : Fragment() {
     }
 
     private fun selectDestinationAccount(selectedUser: String) {
+        val destinationAccountSpinner = binding.destinationAccountSpinner
         if (selectedUser == "No destination selected") {
             binding.destinationAccountLabel.visibility = View.GONE
             binding.destinationAccountSpinner.visibility = View.GONE
@@ -306,11 +304,80 @@ class PaymentsFragment : Fragment() {
             binding.destinationAccountLabel.visibility = View.VISIBLE
             binding.destinationAccountSpinner.visibility = View.VISIBLE
         }
+        getAccountsByUserFromDatabase(selectedUser
+        ) { task ->
+            if (task.isSuccessful) {
+                val accountsList = task.result
+                if (accountsList != null) {
+                    val accountsAdapter = ArrayAdapter(
+                        requireContext(),
+                        android.R.layout.simple_spinner_item,
+                        accountsList
+                    )
+                    accountsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    destinationAccountSpinner.adapter = accountsAdapter
+                    accountsAdapter.insert("No Account Selected", 0)
+                    destinationAccountSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(
+                            parent: AdapterView<*>,
+                            view: View?,
+                            position: Int,
+                            id: Long
+                        ) {
+                            // Get the selected account iban
+                            val selectedIban =
+                                (parent.getItemAtPosition(position) as String)
+                            if (selectedIban != "No Account Selected") {
+                                binding.paymentButton.visibility = View.VISIBLE
+                            } else {
+                                binding.paymentButton.visibility = View.GONE
+                            }
+                        }
+                        override fun onNothingSelected(parent: AdapterView<*>) {
+                            // Do nothing
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    private fun getAccountsByUserFromDatabase() {
+    private fun getAccountsByUserFromDatabase(userName: String, listener: OnCompleteListener<List<String>>) {
+        val userRef = FirebaseDatabase.
+                        getInstance().
+                        reference.
+                        child("users").
+                        orderByChild("name").
+                        equalTo(userName)
+        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val accountsList = ArrayList<String>()
+                for (userSnapshot in dataSnapshot.children) {
+                    for (cardSnapshot in userSnapshot.child("cards").children) {
+                        for (savingsAccountSnapshot in cardSnapshot.child("savingsAccounts").children) {
+                            val iban = savingsAccountSnapshot.child("iban").getValue(String::class.java)
+                            val deposit = savingsAccountSnapshot.child("deposit").getValue(Boolean::class.java)
+                            if (deposit == true)
+                                continue
+                            if (iban != null) {
+                                accountsList.add(iban)
+                            }
+                        }
+                    }
+                }
+                listener.onComplete(Tasks.forResult(accountsList))
+            }
 
+            override fun onCancelled(databaseError: DatabaseError) {
+                listener.onComplete(Tasks.forException(databaseError.toException()))
+            }
+        })
     }
+
+    private fun makePayment() {
+        //TODO: Make payment
+    }
+
 
 
     class InputFilterMinMax(d: Double, accountBalance: Double) : InputFilter {
