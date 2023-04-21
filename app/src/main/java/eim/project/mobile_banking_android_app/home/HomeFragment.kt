@@ -45,6 +45,11 @@ class HomeFragment : Fragment() {
         this.context = context
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        _binding = FragmentHomeBinding.bind(view)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -263,6 +268,8 @@ class HomeFragment : Fragment() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val cardsList = snapshot.children.mapNotNull { it.getValue(Card::class.java) }
                 adapter = CardAdapter(requireContext(), cardsList as ArrayList<Card>)
+                if (_binding == null)
+                    _binding = FragmentHomeBinding.inflate(layoutInflater)
                 binding.recicleView.adapter = adapter
                 itemTouchHelper.attachToRecyclerView(binding.recicleView)
                 if (cardsList.isEmpty()) {

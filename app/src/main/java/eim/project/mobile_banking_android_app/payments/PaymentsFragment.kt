@@ -3,6 +3,8 @@ package eim.project.mobile_banking_android_app.payments
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -11,12 +13,14 @@ import android.text.Editable
 import android.text.InputFilter
 import android.text.Spanned
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -25,10 +29,14 @@ import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import eim.project.mobile_banking_android_app.R
 import eim.project.mobile_banking_android_app.databinding.FragmentPaymentsBinding
+import eim.project.mobile_banking_android_app.transactions.accounts.SavingsAccount
+import eim.project.mobile_banking_android_app.transactions.transfers.Transfer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.*
 
 class PaymentsFragment : Fragment() {
 
@@ -52,7 +60,20 @@ class PaymentsFragment : Fragment() {
         selectSourceCard()
         selectDestinationUser()
         binding.paymentButton.setOnClickListener {
-            makePayment()
+            val builder = AlertDialog.Builder(requireContext())
+            builder.setMessage("Are you sure you want to make the payment?")
+                .setCancelable(false)
+                .setPositiveButton("Yes") { dialog, _ ->
+                    makePayment()
+                    Toast.makeText(requireContext(), "Payment successful!", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
+                .setNegativeButton("No") { dialog, _ ->
+                    dialog.dismiss()
+                }
+            val dialog = builder.create()
+            dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
+            dialog.show()
         }
     }
 
@@ -157,7 +178,6 @@ class PaymentsFragment : Fragment() {
             accountsAdapter.insert(Pair("No account selected", "No IBAN"), 0)
             accountSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                    // Get the selected account number
                     val selectedAccountPair = (parent.getItemAtPosition(position) as Pair<*, *>)
                     selectMoney(selectedCardNumber, selectedAccountPair.second.toString())
                 }
@@ -194,7 +214,7 @@ class PaymentsFragment : Fragment() {
             .child(currentUser!!.uid)
             .child("cards")
 
-        cardsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+        cardsRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 for (cardSnapshot in snapshot.children) {
                     val accountsRef = cardSnapshot.child("savingsAccounts")
@@ -343,6 +363,8 @@ class PaymentsFragment : Fragment() {
     }
 
     private fun getAccountsByUserFromDatabase(userName: String, listener: OnCompleteListener<List<String>>) {
+        val sourceAccountPairs = binding.accountSpinner.selectedItem.toString()
+        val (_, accountNumber) = sourceAccountPairs.substring(1, sourceAccountPairs.length - 1).split(", ")
         val userRef = FirebaseDatabase.
                         getInstance().
                         reference.
@@ -357,6 +379,8 @@ class PaymentsFragment : Fragment() {
                         for (savingsAccountSnapshot in cardSnapshot.child("savingsAccounts").children) {
                             val iban = savingsAccountSnapshot.child("iban").getValue(String::class.java)
                             val deposit = savingsAccountSnapshot.child("deposit").getValue(Boolean::class.java)
+                            if (iban == accountNumber)
+                                continue
                             if (deposit == true)
                                 continue
                             if (iban != null) {
@@ -375,10 +399,165 @@ class PaymentsFragment : Fragment() {
     }
 
     private fun makePayment() {
-        //TODO: Make payment
+        val sourceCardNumber = binding.cardNumberSpinner.selectedItem.toString().replace(" ", "")
+        val sourceAccountPairs = binding.accountSpinner.selectedItem.toString()
+        val sourceAccountCurrency = binding.currency.text.toString()
+        val (sourceAccountName, sourceAccountIban) = sourceAccountPairs.substring(1, sourceAccountPairs.length - 1).split(", ")
+        val amountInput = binding.amountInput.text.toString()
+        val destinationUserName = binding.destinationUserSpinner.selectedItem.toString()
+        val destinationAccountIban = binding.destinationAccountSpinner.selectedItem.toString()
+
+        getSavingsAccountDetailsByIban(destinationAccountIban) { accountDetails ->
+            if (accountDetails != null) {
+                val (destinationAccountName, destinationAccountCurrency) = accountDetails
+                if (sourceAccountCurrency != destinationAccountCurrency) {
+                    // TODO: Convert the amount to the destination currency
+                }
+                val transfer = Transfer(
+                    destIban = destinationAccountIban,
+                    srcIban = sourceAccountIban,
+                    amount = amountInput.toDouble(),
+                    currency = sourceAccountCurrency,
+                    description = "Rent payment",
+                    date = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    type = "outcome",
+                    srcName = sourceAccountName,
+                    destName = destinationAccountName)
+
+                updateSourceAccount(sourceCardNumber, sourceAccountIban, amountInput.toDouble(), transfer)
+                updateDestinationAccount(destinationUserName, destinationAccountIban, amountInput.toDouble(), transfer)
+            }
+        }
+    }
+
+    private fun updateSourceAccount(
+        sourceCardNumber: String,
+        sourceAccountIban: String,
+        amount: Double,
+        transfer: Transfer
+    ) {
+        val rootRef = FirebaseDatabase.getInstance().reference
+        val currentUser = FirebaseAuth.getInstance().currentUser
+
+        rootRef.child("users").child(currentUser!!.uid).child("cards")
+            .orderByChild("number")
+            .equalTo(sourceCardNumber)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        for (cardSnapshot in snapshot.children) {
+                            val accountSnapshot =
+                                cardSnapshot.child("savingsAccounts").children.find {
+                                    it.child("iban").value == sourceAccountIban
+                                }
+                            if (accountSnapshot != null) {
+                                val currentBalance =
+                                    accountSnapshot.child("sold").value as Double
+                                val newBalance = currentBalance - amount
+                                accountSnapshot.ref.child("sold").setValue(newBalance)
+                                updateTransfers(accountSnapshot, transfer)
+                            }
+                        }
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e(
+                        TAG,
+                        "Failed to update source account balance: ${error.message}"
+                    )
+                }
+            })
     }
 
 
+    private fun updateTransfers(accountSnapshot: DataSnapshot, transfer: Transfer) {
+        val transfersRef = accountSnapshot.ref.child("transfers")
+        transfersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val nextIndex = snapshot.childrenCount.toInt()
+                    transfersRef.child(nextIndex.toString()).setValue(transfer)
+                } else {
+                    // Transfers node doesn't exist, create it with the first transfer
+                    transfersRef.child("0").setValue(transfer)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e(
+                    TAG,
+                    "Failed to update transfers for source account: ${error.message}"
+                )
+            }
+        })
+    }
+
+    private fun updateDestinationAccount(destinationUserName: String,
+                                         destinationAccountNumber: String,
+                                         amount: Double,
+                                         transfer: Transfer) {
+        val destTransfer = transfer.copy()
+        destTransfer.type = "income"
+        val usersRef = FirebaseDatabase.getInstance().getReference("users")
+        val query = usersRef.orderByChild("name").equalTo(destinationUserName)
+        query.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                for (userSnapshot in dataSnapshot.children) {
+                    for (cardSnapshot in userSnapshot.child("cards").children) {
+                        for (accountSnapshot in cardSnapshot.child("savingsAccounts").children) {
+                            val account = accountSnapshot.getValue(SavingsAccount::class.java)
+                            if (account != null && account.iban == destinationAccountNumber) {
+                                val newSold = account.sold + amount
+                                accountSnapshot.ref.child("sold").setValue(newSold)
+                                updateTransfers(accountSnapshot, destTransfer)
+                                return
+                            }
+                        }
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.d(TAG, "updateDestinationAccountBalance:onCancelled", error.toException())
+            }
+        })
+    }
+
+    private fun getSavingsAccountDetailsByIban(iban: String, callback: (Pair<String, String>?) -> Unit) {
+        val databaseRef = FirebaseDatabase.getInstance().reference
+        databaseRef.child("users").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var accountDetails: Pair<String, String>? = null
+                for (userSnapshot in snapshot.children) {
+                    val cardsSnapshot = userSnapshot.child("cards")
+                    for (cardSnapshot in cardsSnapshot.children) {
+                        val savingsAccountsSnapshot = cardSnapshot.child("savingsAccounts")
+                        for (accountSnapshot in savingsAccountsSnapshot.children) {
+                            val ibanValue = accountSnapshot.child("iban").getValue(String::class.java)
+                            if (ibanValue == iban) {
+                                val accountName = accountSnapshot.child("name").getValue(String::class.java)
+                                val currency = accountSnapshot.child("currency").getValue(String::class.java)
+                                accountDetails = Pair(accountName!!, currency!!)
+                                break
+                            }
+                        }
+                        if (accountDetails != null) {
+                            break
+                        }
+                    }
+                    if (accountDetails != null) {
+                        break
+                    }
+                }
+                callback(accountDetails)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback(null)
+            }
+        })
+    }
 
     class InputFilterMinMax(d: Double, accountBalance: Double) : InputFilter {
         private var min: Double = d

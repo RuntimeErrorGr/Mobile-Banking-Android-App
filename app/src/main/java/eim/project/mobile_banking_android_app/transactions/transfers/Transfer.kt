@@ -7,7 +7,7 @@ data class Transfer(
     val currency: String = "RON",
     val description: String? = "New transfer",
     val date: String = "01/01/2023",
-    val type: String = "income",
+    var type: String = "outcome",
     val srcName: String = "",
     val destName: String = ""
 )
