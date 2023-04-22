@@ -42,7 +42,14 @@ class SavingsAccountAdapter : RecyclerView.Adapter<SavingsAccountAdapter.Savings
 
     override fun onBindViewHolder(holder: SavingsAccountHolder, position: Int) {
         val account = accounts[position]
-        holder.account_ballance.text = account.sold.toString().substring(0, account.sold.toString().indexOf(".") + 5)
+        val balanceString = account.sold.toString()
+        val decimalIndex = balanceString.indexOf(".") + 1
+        val decimalLength = balanceString.length - decimalIndex
+        holder.account_ballance.text = if (decimalLength > 5) {
+            balanceString.substring(0, decimalIndex + 5)
+        } else {
+            balanceString
+        }
         holder.account_iban.text = account.iban
         holder.account_currency.text = account.currency
         holder.account_type.text = if (account.isDeposit) "Deposit" else if (account.isMain) "" else "Savings"

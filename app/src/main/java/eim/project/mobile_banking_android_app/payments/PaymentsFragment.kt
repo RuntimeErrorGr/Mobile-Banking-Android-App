@@ -25,6 +25,7 @@ import android.widget.Spinner
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Tasks
@@ -472,7 +473,9 @@ class PaymentsFragment : Fragment() {
 
         updateSourceAccount(sourceCardNumber, sourceAccountIban, amount, transfer)
         updateDestinationAccount(destinationUserName, destinationAccountIban, amount, transfer)
-        showItemTransferPopout(amount,
+        showItemTransferPopout(
+            requireContext(),
+            amount,
             sourceAccountCurrency,
             destinationAccountIban,
             sourceAccountIban)
@@ -493,6 +496,8 @@ class PaymentsFragment : Fragment() {
         val scope = CoroutineScope(Dispatchers.IO)
         scope.launch {
             convertCurrency(
+                requireActivity(),
+                requireContext(),
                 sourceAccountIban = sourceAccountIban,
                 destinationAccountIban = destinationAccountIban,
                 sourceCurrency = sourceAccountCurrency,
@@ -528,85 +533,95 @@ class PaymentsFragment : Fragment() {
     }
 
 
-    @SuppressLint("NewApi")
-    fun showItemTransferPopout(
-        convertedAmount: Double,
-        sourceAccountCurrency: String,
-        destinationAccountIban: String,
-        sourceAccountIban: String
-    ) {
-        val popoutDialog = Dialog(requireContext())
-        val binding = ItemTransferBinding.inflate(LayoutInflater.from(requireContext()))
-        popoutDialog.setContentView(binding.root)
-        popoutDialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
-        binding.amountTextview.text = String.format("%.2f", convertedAmount)
-        binding.currencyTextview.text = sourceAccountCurrency
-        binding.dateTextview.text = java.time.LocalDate.now().
-                format(java.time.format.DateTimeFormatter.
-                ofPattern("dd/MM/yyyy"))
-        binding.ibanDestTextview.text = destinationAccountIban
-        binding.ibanSrcTextview.text = sourceAccountIban
-
-        popoutDialog.show()
-
-        Handler().postDelayed({ popoutDialog.dismiss() }, 2000)
-
-    }
 
 
-    @SuppressLint("NewApi")
-    private fun convertCurrency(
-        sourceAccountIban: String,
-        destinationAccountIban: String,
-        sourceCurrency: String,
-        destinationCurrency: String,
-        amount: Double,
-        onSuccess: (Double, Boolean) -> Unit,
-        onFailure: () -> Unit
-    ) {
-        val client = OkHttpClient()
-        var executeTransfer = true
-        val url = "https://api.exchangerate.host/convert?from=$sourceCurrency&to=$destinationCurrency&amount=$amount"
-        val request = Request.Builder()
-            .url(url)
-            .build()
 
-        client.newCall(request).execute().use { response ->
-            if (response.isSuccessful) {
-                val json = response.body?.string()
-                val jsonObject = JsonParser.parseString(json).asJsonObject
-                val convertedAmount = jsonObject.get("result").asDouble
-                val exchangeRate = jsonObject.get("info").asJsonObject.get("rate").asDouble
-                val latch = CountDownLatch(1)
-                requireActivity().runOnUiThread {
-                    AlertDialog.Builder(requireContext())
-                        .setTitle("Different currencies")
-                        .setMessage("Destination account is in a different currency from the source account.\n" +
-                                "If you continue both accounts will be updated accordingly." +
-                                "\n\n $amount $sourceCurrency = ${String.format("%.2f", convertedAmount)} $destinationCurrency" +
-                                "\n\n (1$sourceCurrency = $exchangeRate$destinationCurrency)")
-                        .setPositiveButton("Continue") { dialog, _ ->
-                            dialog.dismiss()
-                            showItemTransferPopout(amount,
-                                                    sourceCurrency,
-                                                    destinationAccountIban,
-                                                    sourceAccountIban)
-                            latch.countDown()
-                        }
-                        .setNegativeButton("Cancel") { dialog, _ ->
-                            dialog.dismiss()
-                            executeTransfer = false
-                            latch.countDown()
-                        }
-                        .show()
+    companion object {
+        @SuppressLint("NewApi")
+        fun showItemTransferPopout(
+            context: Context,
+            convertedAmount: Double,
+            sourceAccountCurrency: String,
+            destinationAccountIban: String,
+            sourceAccountIban: String
+        ) {
+            val popoutDialog = Dialog(context)
+            val binding = ItemTransferBinding.inflate(LayoutInflater.from(context))
+            popoutDialog.setContentView(binding.root)
+            popoutDialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
+            binding.amountTextview.text = String.format("%.2f", convertedAmount)
+            binding.currencyTextview.text = sourceAccountCurrency
+            binding.dateTextview.text = java.time.LocalDate.now().
+            format(java.time.format.DateTimeFormatter.
+            ofPattern("dd/MM/yyyy"))
+            binding.ibanDestTextview.text = destinationAccountIban
+            binding.ibanSrcTextview.text = sourceAccountIban
+
+            popoutDialog.show()
+
+            Handler().postDelayed({ popoutDialog.dismiss() }, 2000)
+
+        }
+
+        @SuppressLint("NewApi")
+        fun convertCurrency(
+            activity: FragmentActivity,
+            context: Context,
+            sourceAccountIban: String,
+            destinationAccountIban: String,
+            sourceCurrency: String,
+            destinationCurrency: String,
+            amount: Double,
+            onSuccess: (Double, Boolean) -> Unit,
+            onFailure: () -> Unit
+        ) {
+            val client = OkHttpClient()
+            var executeTransfer = true
+            val url = "https://api.exchangerate.host/convert?from=$sourceCurrency&to=$destinationCurrency&amount=$amount"
+            val request = Request.Builder()
+                .url(url)
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val json = response.body?.string()
+                    val jsonObject = JsonParser.parseString(json).asJsonObject
+                    val convertedAmount = jsonObject.get("result").asDouble
+                    val exchangeRate = jsonObject.get("info").asJsonObject.get("rate").asDouble
+                    val latch = CountDownLatch(1)
+                    activity.runOnUiThread {
+                        AlertDialog.Builder(context)
+                            .setTitle("Different currencies")
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setMessage("The destination account has a different currency than the source account. If you proceed with the transfer, both accounts will be updated to reflect the currency conversion." +
+                                    "\n\n $amount $sourceCurrency = ${String.format("%.2f", convertedAmount)} $destinationCurrency" +
+                                    "\n\n (1$sourceCurrency = $exchangeRate$destinationCurrency)")
+                            .setPositiveButton("Continue") { dialog, _ ->
+                                dialog.dismiss()
+                                showItemTransferPopout(
+                                    context,
+                                    amount,
+                                    sourceCurrency,
+                                    destinationAccountIban,
+                                    sourceAccountIban)
+                                latch.countDown()
+                            }
+                            .setNegativeButton("Cancel") { dialog, _ ->
+                                dialog.dismiss()
+                                executeTransfer = false
+                                latch.countDown()
+                            }
+                            .show()
+                    }
+                    latch.await()
+                    onSuccess(convertedAmount, executeTransfer)
+                } else {
+                    onFailure()
                 }
-                latch.await()
-                onSuccess(convertedAmount, executeTransfer)
-            } else {
-                onFailure()
             }
         }
     }
+
 
 
     private fun updateSourceAccount(

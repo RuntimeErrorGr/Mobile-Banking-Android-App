@@ -26,6 +26,8 @@ import eim.project.mobile_banking_android_app.R
 import eim.project.mobile_banking_android_app.databinding.DialogAddSavingsAccountBinding
 import eim.project.mobile_banking_android_app.databinding.FragmentSavingsAccountBinding
 import eim.project.mobile_banking_android_app.home.DatePickerFragment
+import eim.project.mobile_banking_android_app.payments.PaymentsFragment
+import kotlinx.coroutines.*
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.*
@@ -305,8 +307,11 @@ class SavingsAccountFragment : Fragment() {
                                 ?.child("0")
                         val mainAccountSold =
                             mainAccountSnapshot?.child("sold")?.getValue(Double::class.java) ?: 0.0
-
+                        val mainAccountCurrency =
+                            mainAccountSnapshot?.child("currency")?.getValue(String::class.java)
                         var accountNode: DatabaseReference? = null
+                        val mainAccountIban = mainAccountSnapshot?.child("iban")
+                            ?.getValue(String::class.java)
 
                         // Find the node that matches the account's IBAN
                         for (childSnapshot in dataSnapshot.children) {
@@ -325,41 +330,116 @@ class SavingsAccountFragment : Fragment() {
                         }
 
                         if (accountNode != null) {
-                            val newMainAccountSoldValue = mainAccountSold + account.sold
-                            accountNode.removeValue().addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    mainAccountSnapshot?.child("sold")?.ref?.setValue(
-                                        newMainAccountSoldValue
-                                    )
-                                        ?.addOnCompleteListener { mainAccountTask ->
-                                            if (mainAccountTask.isSuccessful) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Savings account deleted successfully",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            } else {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Failed to update main account's sold value",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
+                            var newMainAccountSoldValue = mainAccountSold
+                            if (account.currency != mainAccountCurrency && account.sold > 0) {
+                                // Convert the account's sold to the main account's currency
+                                val scope = CoroutineScope(Dispatchers.IO)
+                                fun convertAndRound(account: SavingsAccount,
+                                                    mainAccountCurrency: String,
+                                                    mainAccountIban: String): Double {
+                                    var roundedAmount = 0.0
+                                    PaymentsFragment.convertCurrency(
+                                        activity!!,
+                                        context!!,
+                                        sourceAccountIban = account.iban,
+                                        destinationAccountIban = mainAccountIban,
+                                        sourceCurrency = account.currency,
+                                        destinationCurrency = mainAccountCurrency,
+                                        amount = account.sold,
+                                        onSuccess = { convertedAmount, executeTransfer ->
+                                            if (!executeTransfer) {
+                                                throw Exception("Conversion unsuccessful.")
                                             }
+                                            roundedAmount = BigDecimal(convertedAmount).setScale(2,
+                                                RoundingMode.HALF_EVEN).toDouble()
+                                        },
+                                        onFailure = { throw Exception("Conversion unsuccessful.") }
+                                    )
+                                    return roundedAmount
+                                }
+
+                                // Define a suspend function that waits for the mount
+                                suspend fun updateAccountBalance(account: SavingsAccount,
+                                                                 mainAccountCurrency: String,
+                                                                 mainAccountIban: String,
+                                                                 mainAccountSold: Double) {
+                                    val roundedAmountDeferred = scope.async { convertAndRound(account,
+                                        mainAccountCurrency,
+                                        mainAccountIban) }
+                                    val roundedAmount = roundedAmountDeferred.await()
+                                    newMainAccountSoldValue = mainAccountSold + roundedAmount
+                                }
+                                scope.launch {
+                                    updateAccountBalance(account,
+                                        mainAccountCurrency!!,
+                                        mainAccountIban!!,
+                                        mainAccountSold)
+
+                                    // Update the main account's sold
+                                    accountNode.removeValue().addOnCompleteListener { task ->
+                                        if (task.isSuccessful) {
+                                            mainAccountSnapshot.child("sold").ref.setValue(
+                                                newMainAccountSoldValue
+                                            )
+                                                .addOnCompleteListener { mainAccountTask ->
+                                                    if (mainAccountTask.isSuccessful) {
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Account closed successfully",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    } else {
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Failed to update main account's sold value",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
+                                                }
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                "Failed to delete savings account",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Failed to delete savings account",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    }
+                                }
+                            } else {
+                                newMainAccountSoldValue = mainAccountSold + account.sold
+                                // Update the main account's sold
+                                accountNode.removeValue().addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        mainAccountSnapshot?.child("sold")?.ref?.setValue(
+                                            newMainAccountSoldValue
+                                        )
+                                            ?.addOnCompleteListener { mainAccountTask ->
+                                                if (mainAccountTask.isSuccessful) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Account closed successfully",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                } else {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Failed to update main account's sold value",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            }
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            "Failed to delete savings account",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                                 }
                             }
-                        } else {
-                            Toast.makeText(context, "Account not found", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
-
                 override fun onCancelled(databaseError: DatabaseError) {
                     Log.e(TAG, "loadAccounts:onCancelled", databaseError.toException())
                 }
