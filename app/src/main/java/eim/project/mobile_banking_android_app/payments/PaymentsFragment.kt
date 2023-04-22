@@ -4,10 +4,12 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
 import android.provider.ContactsContract
 import android.text.Editable
 import android.text.InputFilter
@@ -20,7 +22,6 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -29,14 +30,20 @@ import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.google.gson.JsonParser
 import eim.project.mobile_banking_android_app.R
 import eim.project.mobile_banking_android_app.databinding.FragmentPaymentsBinding
+import eim.project.mobile_banking_android_app.databinding.ItemTransferBinding
 import eim.project.mobile_banking_android_app.transactions.accounts.SavingsAccount
 import eim.project.mobile_banking_android_app.transactions.transfers.Transfer
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.*
+import java.util.concurrent.CountDownLatch
+
 
 class PaymentsFragment : Fragment() {
 
@@ -59,13 +66,16 @@ class PaymentsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         selectSourceCard()
         selectDestinationUser()
+        binding.maxAvailableMoney.setOnClickListener {
+            val maxAvailableMoney = binding.maxAvailableMoney.text.toString().replace("/", "").toDouble()
+            binding.amountInput.text = Editable.Factory.getInstance().newEditable(maxAvailableMoney.toString())
+        }
         binding.paymentButton.setOnClickListener {
             val builder = AlertDialog.Builder(requireContext())
             builder.setMessage("Are you sure you want to make the payment?")
                 .setCancelable(false)
                 .setPositiveButton("Yes") { dialog, _ ->
                     makePayment()
-                    Toast.makeText(requireContext(), "Payment successful!", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
                 }
                 .setNegativeButton("No") { dialog, _ ->
@@ -410,25 +420,194 @@ class PaymentsFragment : Fragment() {
         getSavingsAccountDetailsByIban(destinationAccountIban) { accountDetails ->
             if (accountDetails != null) {
                 val (destinationAccountName, destinationAccountCurrency) = accountDetails
-                if (sourceAccountCurrency != destinationAccountCurrency) {
-                    // TODO: Convert the amount to the destination currency
+                if (destinationAccountCurrency != sourceAccountCurrency) {
+                    convertAmountAndTransfer(
+                        sourceCardNumber,
+                        sourceAccountIban,
+                        sourceAccountName,
+                        sourceAccountCurrency,
+                        destinationUserName,
+                        destinationAccountIban,
+                        destinationAccountName,
+                        destinationAccountCurrency,
+                        amountInput.toDouble()
+                    )
+                } else {
+                    transfer(
+                        sourceCardNumber,
+                        sourceAccountIban,
+                        sourceAccountName,
+                        sourceAccountCurrency,
+                        destinationUserName,
+                        destinationAccountIban,
+                        destinationAccountName,
+                        amountInput.toDouble()
+                    )
                 }
-                val transfer = Transfer(
-                    destIban = destinationAccountIban,
-                    srcIban = sourceAccountIban,
-                    amount = amountInput.toDouble(),
-                    currency = sourceAccountCurrency,
-                    description = "Rent payment",
-                    date = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-                    type = "outcome",
-                    srcName = sourceAccountName,
-                    destName = destinationAccountName)
-
-                updateSourceAccount(sourceCardNumber, sourceAccountIban, amountInput.toDouble(), transfer)
-                updateDestinationAccount(destinationUserName, destinationAccountIban, amountInput.toDouble(), transfer)
             }
         }
     }
+
+    @SuppressLint("NewApi")
+    private fun transfer(
+        sourceCardNumber: String,
+        sourceAccountIban: String,
+        sourceAccountName: String,
+        sourceAccountCurrency: String,
+        destinationUserName: String,
+        destinationAccountIban: String,
+        destinationAccountName: String,
+        amount: Double
+    ) {
+        val transfer = Transfer(
+            destIban = destinationAccountIban,
+            srcIban = sourceAccountIban,
+            amount = amount,
+            currency = sourceAccountCurrency,
+            description = "Rent payment",
+            date = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+            type = "outcome",
+            srcName = sourceAccountName,
+            destName = destinationAccountName)
+
+        updateSourceAccount(sourceCardNumber, sourceAccountIban, amount, transfer)
+        updateDestinationAccount(destinationUserName, destinationAccountIban, amount, transfer)
+        showItemTransferPopout(amount,
+            sourceAccountCurrency,
+            destinationAccountIban,
+            sourceAccountIban)
+    }
+
+    @SuppressLint("NewApi")
+    private fun convertAmountAndTransfer(
+        sourceCardNumber: String,
+        sourceAccountIban: String,
+        sourceAccountName: String,
+        sourceAccountCurrency: String,
+        destinationUserName: String,
+        destinationAccountIban: String,
+        destinationAccountName: String,
+        destinationAccountCurrency: String,
+        amount: Double
+    ) {
+        val scope = CoroutineScope(Dispatchers.IO)
+        scope.launch {
+            convertCurrency(
+                sourceAccountIban = sourceAccountIban,
+                destinationAccountIban = destinationAccountIban,
+                sourceCurrency = sourceAccountCurrency,
+                destinationCurrency = destinationAccountCurrency,
+                amount = amount,
+                onSuccess = { convertedAmount, executeTransfer ->
+                    if (!executeTransfer) {
+                        return@convertCurrency
+                    }
+                    val roundedAmount = BigDecimal(convertedAmount).
+                        setScale(2, RoundingMode.HALF_EVEN).
+                        toDouble()
+                    val transfer = Transfer(
+                        destIban = destinationAccountIban,
+                        srcIban = sourceAccountIban,
+                        amount = amount,
+                        currency = sourceAccountCurrency,
+                        description = "Rent payment",
+                        date = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                        type = "outcome",
+                        srcName = sourceAccountName,
+                        destName = destinationAccountName
+                    )
+                    val destTransfer = transfer.copy()
+                    destTransfer.amount = roundedAmount
+                    destTransfer.currency = destinationAccountCurrency
+                    updateSourceAccount(sourceCardNumber, sourceAccountIban, amount, transfer)
+                    updateDestinationAccount(destinationUserName, destinationAccountIban, roundedAmount, destTransfer)
+                },
+                onFailure = {}
+            )
+        }
+    }
+
+
+    @SuppressLint("NewApi")
+    fun showItemTransferPopout(
+        convertedAmount: Double,
+        sourceAccountCurrency: String,
+        destinationAccountIban: String,
+        sourceAccountIban: String
+    ) {
+        val popoutDialog = Dialog(requireContext())
+        val binding = ItemTransferBinding.inflate(LayoutInflater.from(requireContext()))
+        popoutDialog.setContentView(binding.root)
+        popoutDialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
+        binding.amountTextview.text = String.format("%.2f", convertedAmount)
+        binding.currencyTextview.text = sourceAccountCurrency
+        binding.dateTextview.text = java.time.LocalDate.now().
+                format(java.time.format.DateTimeFormatter.
+                ofPattern("dd/MM/yyyy"))
+        binding.ibanDestTextview.text = destinationAccountIban
+        binding.ibanSrcTextview.text = sourceAccountIban
+
+        popoutDialog.show()
+
+        Handler().postDelayed({ popoutDialog.dismiss() }, 2000)
+
+    }
+
+
+    @SuppressLint("NewApi")
+    private fun convertCurrency(
+        sourceAccountIban: String,
+        destinationAccountIban: String,
+        sourceCurrency: String,
+        destinationCurrency: String,
+        amount: Double,
+        onSuccess: (Double, Boolean) -> Unit,
+        onFailure: () -> Unit
+    ) {
+        val client = OkHttpClient()
+        var executeTransfer = true
+        val url = "https://api.exchangerate.host/convert?from=$sourceCurrency&to=$destinationCurrency&amount=$amount"
+        val request = Request.Builder()
+            .url(url)
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            if (response.isSuccessful) {
+                val json = response.body?.string()
+                val jsonObject = JsonParser.parseString(json).asJsonObject
+                val convertedAmount = jsonObject.get("result").asDouble
+                val exchangeRate = jsonObject.get("info").asJsonObject.get("rate").asDouble
+                val latch = CountDownLatch(1)
+                requireActivity().runOnUiThread {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Different currencies")
+                        .setMessage("Destination account is in a different currency from the source account.\n" +
+                                "If you continue both accounts will be updated accordingly." +
+                                "\n\n $amount $sourceCurrency = ${String.format("%.2f", convertedAmount)} $destinationCurrency" +
+                                "\n\n (1$sourceCurrency = $exchangeRate$destinationCurrency)")
+                        .setPositiveButton("Continue") { dialog, _ ->
+                            dialog.dismiss()
+                            showItemTransferPopout(amount,
+                                                    sourceCurrency,
+                                                    destinationAccountIban,
+                                                    sourceAccountIban)
+                            latch.countDown()
+                        }
+                        .setNegativeButton("Cancel") { dialog, _ ->
+                            dialog.dismiss()
+                            executeTransfer = false
+                            latch.countDown()
+                        }
+                        .show()
+                }
+                latch.await()
+                onSuccess(convertedAmount, executeTransfer)
+            } else {
+                onFailure()
+            }
+        }
+    }
+
 
     private fun updateSourceAccount(
         sourceCardNumber: String,
@@ -451,8 +630,11 @@ class PaymentsFragment : Fragment() {
                                     it.child("iban").value == sourceAccountIban
                                 }
                             if (accountSnapshot != null) {
-                                val currentBalance =
-                                    accountSnapshot.child("sold").value as Double
+                                val currentBalance = when (val sold = accountSnapshot.child("sold").value) {
+                                    is Long -> sold.toDouble()
+                                    is Double -> sold
+                                    else -> throw IllegalArgumentException("Unexpected value type for sold")
+                                }
                                 val newBalance = currentBalance - amount
                                 accountSnapshot.ref.child("sold").setValue(newBalance)
                                 updateTransfers(accountSnapshot, transfer)
@@ -575,8 +757,9 @@ class PaymentsFragment : Fragment() {
         private fun isInRange(a: Double, b: Double, c: Double): Boolean {
             return if (b > a) c in a..b else c in b..a
 
+        }
     }
-}
+
 
 
     override fun onDestroyView() {

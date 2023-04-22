@@ -98,8 +98,9 @@ class TransferFragment : Fragment() {
                                         filteredList = if (newText.isNullOrBlank()) {
                                             transfersList
                                         } else {
-                                            transfersList.filter { it.srcName.contains(newText, true) ||
-                                                    it.destName.contains(newText, true) } as ArrayList<Transfer>
+                                            (transfersList.filter { (it.srcName.contains(newText, true) && it.type == "outcome") ||
+                                                    (it.destName.contains(newText, true) && it.type == "income") }
+                                                    as ArrayList<Transfer>)
                                         }
                                         adapter = TransferAdapter(requireContext(), filteredList)
                                         binding.recicleView.adapter = adapter
