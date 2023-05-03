@@ -1,4 +1,4 @@
-package eim.project.mobile_banking_android_app.home
+package eim.project.mobile_banking_android_app.card
 
 import eim.project.mobile_banking_android_app.transactions.accounts.SavingsAccount
 

@@ -1,4 +1,4 @@
-package eim.project.mobile_banking_android_app
+package eim.project.mobile_banking_android_app.card
 
 import android.os.Bundle
 import android.view.View
@@ -10,9 +10,9 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import eim.project.mobile_banking_android_app.R
 import eim.project.mobile_banking_android_app.databinding.ActivityCardDetailsBinding
 import eim.project.mobile_banking_android_app.databinding.DialogChangePinBinding
-import eim.project.mobile_banking_android_app.home.Card
 import eim.project.mobile_banking_android_app.transactions.accounts.SavingsAccountFragment
 import eim.project.mobile_banking_android_app.transactions.transfers.TransferFragment
 import java.util.*

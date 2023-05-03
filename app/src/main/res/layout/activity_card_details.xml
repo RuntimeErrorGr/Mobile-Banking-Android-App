@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/back01"
     android:paddingTop="10dp"
-    tools:context=".CardDetailsActivity">
+    tools:context=".card.CardDetailsActivity">
 
     <FrameLayout
         android:id="@+id/card_container"

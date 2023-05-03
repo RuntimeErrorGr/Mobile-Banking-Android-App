@@ -21,9 +21,11 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import eim.project.mobile_banking_android_app.CardDetailsActivity
+import eim.project.mobile_banking_android_app.card.CardDetailsActivity
 import eim.project.mobile_banking_android_app.MainActivity
 import eim.project.mobile_banking_android_app.R
+import eim.project.mobile_banking_android_app.card.Card
+import eim.project.mobile_banking_android_app.card.CardAdapter
 import eim.project.mobile_banking_android_app.databinding.DialogAddCardBinding
 import eim.project.mobile_banking_android_app.databinding.FragmentHomeBinding
 import eim.project.mobile_banking_android_app.transactions.accounts.SavingsAccount
