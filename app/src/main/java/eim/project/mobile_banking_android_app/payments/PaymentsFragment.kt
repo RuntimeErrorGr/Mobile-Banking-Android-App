@@ -22,6 +22,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -471,8 +472,7 @@ class PaymentsFragment : Fragment() {
             srcName = sourceAccountName,
             destName = destinationAccountName)
 
-        updateSourceAccount(sourceCardNumber, sourceAccountIban, amount, transfer)
-        updateDestinationAccount(destinationUserName, destinationAccountIban, amount, transfer)
+        updateAccounts(sourceCardNumber, sourceAccountIban, amount, transfer, destinationUserName, destinationAccountIban, amount, transfer)
         showItemTransferPopout(
             requireContext(),
             amount,
@@ -493,6 +493,10 @@ class PaymentsFragment : Fragment() {
         destinationAccountCurrency: String,
         amount: Double
     ) {
+        if (amount <= 0) {
+            Toast.makeText(requireContext(), "Transferred amount must be greater than 0", Toast.LENGTH_SHORT).show()
+            return
+        }
         val scope = CoroutineScope(Dispatchers.IO)
         scope.launch {
             convertCurrency(
@@ -510,7 +514,7 @@ class PaymentsFragment : Fragment() {
                     val roundedAmount = BigDecimal(convertedAmount).
                         setScale(2, RoundingMode.HALF_EVEN).
                         toDouble()
-                    val transfer = Transfer(
+                    val srcTransfer = Transfer(
                         destIban = destinationAccountIban,
                         srcIban = sourceAccountIban,
                         amount = amount,
@@ -521,20 +525,15 @@ class PaymentsFragment : Fragment() {
                         srcName = sourceAccountName,
                         destName = destinationAccountName
                     )
-                    val destTransfer = transfer.copy()
+                    val destTransfer = srcTransfer.copy()
                     destTransfer.amount = roundedAmount
                     destTransfer.currency = destinationAccountCurrency
-                    updateSourceAccount(sourceCardNumber, sourceAccountIban, amount, transfer)
-                    updateDestinationAccount(destinationUserName, destinationAccountIban, roundedAmount, destTransfer)
+                    updateAccounts(sourceCardNumber, sourceAccountIban, amount, srcTransfer, destinationUserName, destinationAccountIban, roundedAmount, destTransfer)
                 },
                 onFailure = {}
             )
         }
     }
-
-
-
-
 
     companion object {
         @SuppressLint("NewApi")
@@ -624,11 +623,15 @@ class PaymentsFragment : Fragment() {
 
 
 
-    private fun updateSourceAccount(
+    private fun updateAccounts(
         sourceCardNumber: String,
         sourceAccountIban: String,
         amount: Double,
-        transfer: Transfer
+        srcTransfer: Transfer,
+        destinationUserName: String,
+        destinationAccountIban: String,
+        roundedAmount: Double,
+        destTransfer: Transfer
     ) {
         val rootRef = FirebaseDatabase.getInstance().reference
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -650,9 +653,14 @@ class PaymentsFragment : Fragment() {
                                     is Double -> sold
                                     else -> throw IllegalArgumentException("Unexpected value type for sold")
                                 }
+                                if (currentBalance <= 0) {
+                                    Toast.makeText(requireContext(), "Insufficient funds", Toast.LENGTH_SHORT).show()
+                                    return
+                                }
                                 val newBalance = currentBalance - amount
                                 accountSnapshot.ref.child("sold").setValue(newBalance)
-                                updateTransfers(accountSnapshot, transfer)
+                                updateTransfers(accountSnapshot, srcTransfer)
+                                updateDestinationAccount(destinationUserName, destinationAccountIban, roundedAmount, destTransfer)
                             }
                         }
                     }

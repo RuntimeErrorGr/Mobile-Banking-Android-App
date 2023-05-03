@@ -169,6 +169,30 @@ class SavingsAccountFragment : Fragment() {
         val cardsRef = currentUser?.uid?.let {
             FirebaseDatabase.getInstance().reference.child("users").child(it).child("cards")
         }
+        val scope = CoroutineScope(Dispatchers.IO)
+        fun convertAndRound(account: SavingsAccount,
+                            mainAccountCurrency: String,
+                            mainAccountIban: String): Double {
+            var roundedAmount = 0.0
+            PaymentsFragment.convertCurrency(
+                requireActivity(),
+                requireContext(),
+                sourceAccountIban = mainAccountIban,
+                destinationAccountIban = account.iban,
+                sourceCurrency = mainAccountCurrency,
+                destinationCurrency = account.currency,
+                amount = account.sold,
+                onSuccess = { convertedAmount, executeTransfer ->
+                    if (!executeTransfer) {
+                        throw Exception("Conversion unsuccessful.")
+                    }
+                    roundedAmount = BigDecimal(convertedAmount).setScale(2,
+                        RoundingMode.HALF_EVEN).toDouble()
+                },
+                onFailure = { throw Exception("Conversion unsuccessful.") }
+            )
+            return roundedAmount
+        }
 
         cardsRef?.orderByChild("number")?.equalTo(cardNumber)?.
         addListenerForSingleValueEvent(object : ValueEventListener {
@@ -181,6 +205,14 @@ class SavingsAccountFragment : Fragment() {
                     child("sold")?.
                     getValue(Double::class.java) ?:
                     0.0
+                val mainAccountIban = mainAccountSnapshot?.
+                    child("iban")?.
+                    getValue(String::class.java) ?:
+                    ""
+                val mainAccountCurrency = mainAccountSnapshot?.
+                    child("currency")?.
+                    getValue(String::class.java) ?:
+                    "RON"
                 val savingsAccountsRef = mainAccountSnapshot?.ref?.parent
                 val accountNumber = dataSnapshot.children.
                     firstOrNull()?.
@@ -199,24 +231,53 @@ class SavingsAccountFragment : Fragment() {
                 }
 
                 val newMainAccountSoldValue = mainAccountSold - account.sold
-                savingsAccountsRef?.child(accountNumber)?.setValue(account)?.addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        mainAccountSnapshot.child("sold").ref.setValue(newMainAccountSoldValue)
-                            .addOnCompleteListener { mainAccountTask ->
-                                if (mainAccountTask.isSuccessful) {
-                                    Toast.makeText(context, "Savings account added successfully",
-                                        Toast.LENGTH_SHORT).show()
-                                    dialog.dismiss()
-                                } else {
-                                    Toast.makeText(context, "Failed to update main account's sold value",
-                                        Toast.LENGTH_SHORT).show()
-                                }
+                if (mainAccountCurrency != account.currency && account.isDeposit) {
+                    val roundedAmountDeferred = scope.async { convertAndRound(account,
+                        mainAccountCurrency,
+                        mainAccountIban) }
+                    scope.launch {
+                        val roundedAmount = roundedAmountDeferred.await()
+                        account.sold = roundedAmount
+                        savingsAccountsRef?.child(accountNumber)?.setValue(account)?.addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                mainAccountSnapshot.child("sold").ref.setValue(newMainAccountSoldValue)
+                                    .addOnCompleteListener { mainAccountTask ->
+                                        if (mainAccountTask.isSuccessful) {
+                                            Toast.makeText(context, "Savings account added successfully",
+                                                Toast.LENGTH_SHORT).show()
+                                            dialog.dismiss()
+                                        } else {
+                                            Toast.makeText(context, "Failed to update main account's sold value",
+                                                Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                            } else {
+                                Toast.makeText(context, "Failed to add savings account",
+                                    Toast.LENGTH_SHORT).show()
                             }
-                    } else {
-                        Toast.makeText(context, "Failed to add savings account",
-                            Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    savingsAccountsRef?.child(accountNumber)?.setValue(account)?.addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            mainAccountSnapshot.child("sold").ref.setValue(newMainAccountSoldValue)
+                                .addOnCompleteListener { mainAccountTask ->
+                                    if (mainAccountTask.isSuccessful) {
+                                        Toast.makeText(context, "Savings account added successfully",
+                                            Toast.LENGTH_SHORT).show()
+                                        dialog.dismiss()
+                                    } else {
+                                        Toast.makeText(context, "Failed to update main account's sold value",
+                                            Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                        } else {
+                            Toast.makeText(context, "Failed to add savings account",
+                                Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
+
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
@@ -358,7 +419,7 @@ class SavingsAccountFragment : Fragment() {
                                     return roundedAmount
                                 }
 
-                                // Define a suspend function that waits for the mount
+                                // Define a suspend function that waits for the amount
                                 suspend fun updateAccountBalance(account: SavingsAccount,
                                                                  mainAccountCurrency: String,
                                                                  mainAccountIban: String,

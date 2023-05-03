@@ -86,7 +86,7 @@ class TransferFragment : Fragment() {
                                     ArrayList(emptyList()) // show no transfers
                                 }) as ArrayList<Transfer>
 
-                                adapter = TransferAdapter(requireContext(), filteredList)
+                                adapter = context?.let { TransferAdapter(it, filteredList) }!!
                                 binding.recicleView.adapter = adapter
 
                                 binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {

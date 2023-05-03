@@ -267,7 +267,7 @@ class HomeFragment : Fragment() {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val cardsList = snapshot.children.mapNotNull { it.getValue(Card::class.java) }
-                adapter = CardAdapter(requireContext(), cardsList as ArrayList<Card>)
+                adapter = context?.let { CardAdapter(it, cardsList as ArrayList<Card>) }!!
                 if (_binding == null)
                     _binding = FragmentHomeBinding.inflate(layoutInflater)
                 binding.recicleView.adapter = adapter
