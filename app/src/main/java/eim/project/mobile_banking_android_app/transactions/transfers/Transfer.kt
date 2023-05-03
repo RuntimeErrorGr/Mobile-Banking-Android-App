@@ -1,5 +1,8 @@
 package eim.project.mobile_banking_android_app.transactions.transfers
 
+/**
+ * Data class representing a transfer between two accounts.
+ */
 data class Transfer(
     val destIban: String,
     val srcIban: String,

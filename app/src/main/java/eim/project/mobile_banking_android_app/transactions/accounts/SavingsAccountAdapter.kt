@@ -1,5 +1,6 @@
 package eim.project.mobile_banking_android_app.transactions.accounts
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -40,6 +41,7 @@ class SavingsAccountAdapter : RecyclerView.Adapter<SavingsAccountAdapter.Savings
         return accounts.size
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: SavingsAccountHolder, position: Int) {
         val account = accounts[position]
         val balanceString = account.sold.toString()
