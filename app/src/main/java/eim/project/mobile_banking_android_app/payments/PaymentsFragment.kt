@@ -46,7 +46,13 @@ import java.math.RoundingMode
 import java.util.*
 import java.util.concurrent.CountDownLatch
 
-
+/**
+ * A fragment to make payments.
+ * It allows the user to select a source card, a destination user, and an amount to pay.
+ * It also shows the maximum available money for the selected source card.
+ * When the user clicks the pay button, it shows a dialog to confirm the payment.
+ * If the user confirms the payment, it makes the payment and shows a dialog with the result.
+ * */
 class PaymentsFragment : Fragment() {
 
     private var _binding: FragmentPaymentsBinding? = null
@@ -55,6 +61,9 @@ class PaymentsFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
+    /**
+     * Called to do initial creation of a fragment.
+     * */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -64,14 +73,20 @@ class PaymentsFragment : Fragment() {
         return binding.root
     }
 
+    /**
+     * Called immediately after onCreateView(LayoutInflater, ViewGroup, Bundle) has returned
+     * but before any saved state has been restored in to the view.
+     * */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         selectSourceCard()
         selectDestinationUser()
+        // Set the maximum available money for the selected source card
         binding.maxAvailableMoney.setOnClickListener {
             val maxAvailableMoney = binding.maxAvailableMoney.text.toString().replace("/", "").toDouble()
             binding.amountInput.text = Editable.Factory.getInstance().newEditable(maxAvailableMoney.toString())
         }
+        // Start the payment process
         binding.paymentButton.setOnClickListener {
             val builder = AlertDialog.Builder(requireContext())
             builder.setMessage("Are you sure you want to make the payment?")
@@ -89,6 +104,10 @@ class PaymentsFragment : Fragment() {
         }
     }
 
+    /**
+     * Set the source card for the payment.
+     * Call the function to get the accounts from the database.
+     * */
     private fun selectSourceCard() {
         val cardNumberSpinner: Spinner = binding.cardNumberSpinner
         binding.amountInput.setText("")
@@ -109,6 +128,9 @@ class PaymentsFragment : Fragment() {
         }
     }
 
+    /**
+     * Get the card numbers from the database.
+     * */
     private fun getCardsFromDatabase(listener: OnCompleteListener<List<String>>) {
         val cardNumberList = ArrayList<String>()
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -134,6 +156,9 @@ class PaymentsFragment : Fragment() {
         })
     }
 
+    /**
+     * Get the accounts from the database.
+     * */
     private fun getAccountsFromDatabase(selectedCardNumber: String, listener: OnCompleteListener<List<Pair<String, String>>>) {
         val accountsList = ArrayList<Pair<String, String>>()
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -146,10 +171,12 @@ class PaymentsFragment : Fragment() {
 
         cardsRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                // Iterate through the cards
                 for (cardSnapshot in snapshot.children) {
                     val cardNumber = cardSnapshot.child("number").getValue(String::class.java)
                     if (cardNumber != null && cardNumber == selectedCardNumber) {
                         val accountsRef = cardSnapshot.child("savingsAccounts")
+                        // Get the savings accounts for the selected card
                         for (accountSnapshot in accountsRef.children) {
                             val accountDeposit = accountSnapshot.child("deposit").getValue(Boolean::class.java)
                             if (accountDeposit != null && accountDeposit)
@@ -170,6 +197,10 @@ class PaymentsFragment : Fragment() {
         })
     }
 
+    /**
+     * Set the destination account for the payment.
+     * Call the function to get accounts from the database.
+     * */
     private fun selectSourceAccount(selectedCardNumber: String) {
         val accountLabel = binding.accountLabel
         val accountSpinner = binding.accountSpinner

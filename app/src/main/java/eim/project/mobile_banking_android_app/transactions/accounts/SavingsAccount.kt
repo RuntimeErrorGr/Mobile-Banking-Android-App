@@ -2,6 +2,9 @@ package eim.project.mobile_banking_android_app.transactions.accounts
 
 import eim.project.mobile_banking_android_app.transactions.transfers.Transfer
 
+/**
+ * Data class representing a savings account.
+ * */
 data class SavingsAccount(
     var cardNumber: String? = null,
     var currency: String = "RON",

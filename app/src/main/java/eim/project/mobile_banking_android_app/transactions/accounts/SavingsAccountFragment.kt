@@ -34,6 +34,9 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.ln
 
+/**
+ * A simple [Fragment] subclass.
+ */
 class SavingsAccountFragment : Fragment() {
     private var _binding: FragmentSavingsAccountBinding? = null
     private lateinit var dialogView: DialogAddSavingsAccountBinding
@@ -42,6 +45,11 @@ class SavingsAccountFragment : Fragment() {
     private var context: Context? = null
     private var cardNumber: String? = null
 
+    /**
+     * Called when the fragment is starting.
+     *
+     * @param savedInstanceState If the fragment is being re-created from a previous saved state, this is the state.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -60,6 +68,9 @@ class SavingsAccountFragment : Fragment() {
         this.context = context
     }
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     */
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -142,19 +153,20 @@ class SavingsAccountFragment : Fragment() {
                         map { (0..9).random() }.
                         joinToString("")}".
                         padEnd(16, '0')
-
-                    // Create account
-                    val account = SavingsAccount(
-                        cardNumber = cardNumber,
-                        currency = objectCurrency,
-                        name = objectName,
-                        iban = iban,
-                        interest_rate = objectRate,
-                        sold = objectAmount,
-                        liquidation_date = objectDate,
-                        isDeposit = depositCheckbox,
-                    )
-                    addSavingsAccountToDatabase(account, dialog)
+                    if (validateSavingsAccountDetailsInput(objectRate, objectAmount, objectDate, objectCurrency, objectName)) {
+                        // Create account
+                        val account = SavingsAccount(
+                            cardNumber = cardNumber,
+                            currency = objectCurrency,
+                            name = objectName,
+                            iban = iban,
+                            interest_rate = objectRate,
+                            sold = objectAmount,
+                            liquidation_date = objectDate,
+                            isDeposit = depositCheckbox,
+                        )
+                        addSavingsAccountToDatabase(account, dialog)
+                    }
                 }
             }
             dialog.show()
@@ -163,6 +175,49 @@ class SavingsAccountFragment : Fragment() {
         return root
     }
 
+    private fun validateSavingsAccountDetailsInput(objectRate: Double,
+                                                   objectAmount: Double,
+                                                   objectDate: String,
+                                                   objectCurrency: String,
+                                                   objectName: String): Boolean {
+        if (objectCurrency.length != 3) {
+            Toast.makeText(requireContext(), "Currency must be 3 characters long", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (objectName.length > 20) {
+            Toast.makeText(requireContext(), "Account name must be less than 20 characters long", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (objectName.length < 3) {
+            Toast.makeText(requireContext(), "Account name must be at least 3 characters long", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (objectAmount < 0) {
+            Toast.makeText(requireContext(), "Amount must be positive", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (objectRate < 0) {
+            Toast.makeText(requireContext(), "Rate must be positive", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (objectDate == "") {
+            Toast.makeText(requireContext(), "Date must be selected", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (objectDate.length != 10) {
+            Toast.makeText(requireContext(), "Date must be in format dd/MM/yyyy", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (objectDate < SimpleDateFormat("dd/MM/yyyy", Locale.US).format(Date())) {
+            Toast.makeText(requireContext(), "Date must be in the future", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        return true
+    }
+
+    /**
+     * Load accounts from database.
+     */
     private fun addSavingsAccountToDatabase(account: SavingsAccount, dialog: AlertDialog) {
         val currentUser = FirebaseAuth.getInstance().currentUser
 
@@ -170,6 +225,10 @@ class SavingsAccountFragment : Fragment() {
             FirebaseDatabase.getInstance().reference.child("users").child(it).child("cards")
         }
         val scope = CoroutineScope(Dispatchers.IO)
+
+        /**
+         * Convert currency and round amount.
+         */
         fun convertAndRound(account: SavingsAccount,
                             mainAccountCurrency: String,
                             mainAccountIban: String): Double {
@@ -287,6 +346,9 @@ class SavingsAccountFragment : Fragment() {
         })
     }
 
+    /**
+     * Loads the accounts from the database and displays them in the recycler view.
+     * */
     private fun loadAccounts() {
         val currentUser = FirebaseAuth.getInstance().currentUser
         val database = FirebaseDatabase.getInstance()
@@ -343,6 +405,9 @@ class SavingsAccountFragment : Fragment() {
             return false
         }
 
+        /**
+         * Deletes the account from the database and updates the main account's sold value.
+         * */
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
             val position = viewHolder.adapterPosition
             val account = adapter.accounts[position]
