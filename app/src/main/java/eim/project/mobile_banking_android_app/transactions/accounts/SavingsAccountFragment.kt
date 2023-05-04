@@ -137,9 +137,15 @@ class SavingsAccountFragment : Fragment() {
                     // Get data from UI
                     val accountNameText = dialogView.accountName.text.toString()
                     val accountCurrencyText = dialogView.accountCurrency.text.toString()
-                    val depositAmountText = dialogView.depositAmount.text.toString()
-                    val depositDateText = dialogView.depositDate.text.toString()
+                    var depositAmountText = dialogView.depositAmount.text.toString()
+                    if (depositAmountText.isEmpty())
+                        depositAmountText = "0.0"
+                    var depositDateText = dialogView.depositDate.text.toString()
+                    if (depositDateText.isEmpty())
+                        depositDateText = SimpleDateFormat("dd/MM/yyyy", Locale.US).format(Date())
                     val depositRateText = dialogView.depositRate.text.toString()
+                    if (depositRateText.isEmpty())
+                        depositDateText = "0.0"
                     val depositCheckbox = dialogView.depositCheckbox.isChecked
 
                     // Additional data
@@ -153,7 +159,7 @@ class SavingsAccountFragment : Fragment() {
                         map { (0..9).random() }.
                         joinToString("")}".
                         padEnd(16, '0')
-                    if (validateSavingsAccountDetailsInput(objectRate, objectAmount, objectDate, objectCurrency, objectName)) {
+                    if (validateSavingsAccountDetailsInput(objectRate, objectAmount, objectDate, objectCurrency, objectName, depositCheckbox)) {
                         // Create account
                         val account = SavingsAccount(
                             cardNumber = cardNumber,
@@ -179,7 +185,8 @@ class SavingsAccountFragment : Fragment() {
                                                    objectAmount: Double,
                                                    objectDate: String,
                                                    objectCurrency: String,
-                                                   objectName: String): Boolean {
+                                                   objectName: String,
+                                                   depositCheckbox: Boolean): Boolean {
         if (objectCurrency.length != 3) {
             Toast.makeText(requireContext(), "Currency must be 3 characters long", Toast.LENGTH_SHORT).show()
             return false
@@ -188,29 +195,27 @@ class SavingsAccountFragment : Fragment() {
             Toast.makeText(requireContext(), "Account name must be less than 20 characters long", Toast.LENGTH_SHORT).show()
             return false
         }
-        if (objectName.length < 3) {
-            Toast.makeText(requireContext(), "Account name must be at least 3 characters long", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        if (objectAmount < 0) {
-            Toast.makeText(requireContext(), "Amount must be positive", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        if (objectRate < 0) {
-            Toast.makeText(requireContext(), "Rate must be positive", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        if (objectDate == "") {
-            Toast.makeText(requireContext(), "Date must be selected", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        if (objectDate.length != 10) {
-            Toast.makeText(requireContext(), "Date must be in format dd/MM/yyyy", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        if (objectDate < SimpleDateFormat("dd/MM/yyyy", Locale.US).format(Date())) {
-            Toast.makeText(requireContext(), "Date must be in the future", Toast.LENGTH_SHORT).show()
-            return false
+        if (depositCheckbox) {
+            if (objectAmount <= 0) {
+                Toast.makeText(requireContext(), "Amount must be positive", Toast.LENGTH_SHORT).show()
+                return false
+            }
+            if (objectRate <= 0) {
+                Toast.makeText(requireContext(), "Rate must be positive", Toast.LENGTH_SHORT).show()
+                return false
+            }
+            if (objectDate == "") {
+                Toast.makeText(requireContext(), "Date must be selected", Toast.LENGTH_SHORT).show()
+                return false
+            }
+            if (objectDate.length != 10) {
+                Toast.makeText(requireContext(), "Date must be in format dd/MM/yyyy", Toast.LENGTH_SHORT).show()
+                return false
+            }
+            if (objectDate <= SimpleDateFormat("dd/MM/yyyy", Locale.US).format(Date())) {
+                Toast.makeText(requireContext(), "Date must be in the future", Toast.LENGTH_SHORT).show()
+                return false
+            }
         }
         return true
     }
